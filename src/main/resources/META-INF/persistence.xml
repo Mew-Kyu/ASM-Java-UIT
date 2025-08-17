@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<persistence version="3.0"
+             xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd">
+    <persistence-unit name="QuanLyCuaHangPU" transaction-type="RESOURCE_LOCAL">
+        <class>model.BienTheSanPham</class>
+        <class>model.ChiTietHoaDon</class>
+        <class>model.DanhMuc</class>
+        <class>model.HoaDon</class>
+        <class>model.KhachHang</class>
+        <class>model.NhanVien</class>
+        <class>model.SanPham</class>
+        <class>model.MauSac</class>
+        <class>model.KichThuoc</class>
+        <class>model.TaiKhoan</class>
+        <!-- Config JDBC -->
+        <properties>
+            <!-- JPA -->
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:sqlserver://localhost:1433;databaseName=QuanLyCuaHangQuanAo;trustServerCertificate=true"/>
+            <property name="jakarta.persistence.jdbc.user" value="sa"/>
+            <property name="jakarta.persistence.jdbc.password" value="123"/>
+            <property name="jakarta.persistence.jdbc.driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
+
+            <!-- Hibernate -->
+            <property name="hibernate.connection.provider_class" value="org.hibernate.hikaricp.internal.HikariCPConnectionProvider"/>
+            <property name="hibernate.hikari.minimumIdle" value="3"/>
+            <property name="hibernate.hikari.maximumPoolSize" value="10"/>
+            <property name="hibernate.hikari.idleTimeout" value="30000"/>
+            <property name="hibernate.hikari.connectionTimeout" value="30000"/>
+            <property name="hibernate.hikari.poolName" value="MyPool"/>
+            <property name="hibernate.hikari.autoCommit" value="false"/>
+
+            <!-- Debugging -->
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+        </properties>
+    </persistence-unit>
+</persistence>

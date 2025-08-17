@@ -1,0 +1,151 @@
+package view;
+
+import model.KichThuoc;
+import controller.KichThuocController;
+import util.SessionManager;
+import util.RoleManager;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
+
+public class KichThuocUI extends JFrame {
+    private KichThuocController controller;
+    private JTable table;
+    private DefaultTableModel tableModel;
+    private JTextField txtId, txtTenSize;
+    private JButton btnAdd, btnUpdate, btnDelete, btnRefresh;
+
+    public KichThuocUI() {
+        // Check authentication and authorization
+        if (!SessionManager.getInstance().isLoggedIn()) {
+            JOptionPane.showMessageDialog(null, "Vui lòng đăng nhập trước!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            new LoginUI().setVisible(true);
+            this.dispose();
+            return;
+        }
+
+        if (!RoleManager.canAccessProductConfiguration()) {
+            RoleManager.showAccessDeniedMessage(null, "Manager hoặc Admin");
+            this.dispose();
+            return;
+        }
+
+        controller = new KichThuocController();
+        setTitle("Quản Lý Kích Thước - " + SessionManager.getInstance().getCurrentUsername());
+        setSize(500, 400);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        initComponents();
+        loadTable();
+    }
+
+    private void initComponents() {
+        JPanel panel = new JPanel(new BorderLayout());
+        tableModel = new DefaultTableModel(new Object[]{"Mã Size", "Tên Size"}, 0);
+        table = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(table);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel inputPanel = new JPanel(new GridLayout(2, 2));
+        inputPanel.add(new JLabel("Mã Size:"));
+        txtId = new JTextField();
+        txtId.setEnabled(false);
+        inputPanel.add(txtId);
+        inputPanel.add(new JLabel("Tên Size:"));
+        txtTenSize = new JTextField();
+        inputPanel.add(txtTenSize);
+        panel.add(inputPanel, BorderLayout.NORTH);
+
+        JPanel buttonPanel = new JPanel();
+        btnAdd = new JButton("Thêm");
+        btnUpdate = new JButton("Sửa");
+        btnDelete = new JButton("Xóa");
+        btnRefresh = new JButton("Làm mới");
+        buttonPanel.add(btnAdd);
+        buttonPanel.add(btnUpdate);
+        buttonPanel.add(btnDelete);
+        buttonPanel.add(btnRefresh);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        add(panel);
+
+        btnAdd.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String tenSize = txtTenSize.getText().trim();
+                if (!tenSize.isEmpty()) {
+                    controller.addKichThuoc(tenSize);
+                    loadTable();
+                    clearInput();
+                } else {
+                    JOptionPane.showMessageDialog(KichThuocUI.this, "Tên Size không được để trống!");
+                }
+            }
+        });
+
+        btnUpdate.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int row = table.getSelectedRow();
+                if (row >= 0) {
+                    int id = Integer.parseInt(txtId.getText());
+                    String tenSize = txtTenSize.getText().trim();
+                    controller.updateKichThuoc(id, tenSize);
+                    loadTable();
+                    clearInput();
+                } else {
+                    JOptionPane.showMessageDialog(KichThuocUI.this, "Chọn một dòng để sửa!");
+                }
+            }
+        });
+
+        btnDelete.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int row = table.getSelectedRow();
+                if (row >= 0) {
+                    int id = Integer.parseInt(txtId.getText());
+                    controller.deleteKichThuoc(id);
+                    loadTable();
+                    clearInput();
+                } else {
+                    JOptionPane.showMessageDialog(KichThuocUI.this, "Chọn một dòng để xóa!");
+                }
+            }
+        });
+
+        btnRefresh.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                loadTable();
+                clearInput();
+            }
+        });
+
+        table.getSelectionModel().addListSelectionListener(e -> {
+            int row = table.getSelectedRow();
+            if (row >= 0) {
+                txtId.setText(tableModel.getValueAt(row, 0).toString());
+                txtTenSize.setText(tableModel.getValueAt(row, 1).toString());
+            }
+        });
+    }
+
+    private void loadTable() {
+        tableModel.setRowCount(0);
+        List<KichThuoc> list = controller.getAllKichThuoc();
+        for (KichThuoc kt : list) {
+            tableModel.addRow(new Object[]{kt.getId(), kt.getTenSize()});
+        }
+    }
+
+    private void clearInput() {
+        txtId.setText("");
+        txtTenSize.setText("");
+        table.clearSelection();
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new KichThuocUI().setVisible(true));
+    }
+}
