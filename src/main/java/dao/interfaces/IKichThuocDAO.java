@@ -9,4 +9,6 @@ public interface IKichThuocDAO {
     void delete(int maSize);
     KichThuoc findById(int maSize);
     List<KichThuoc> findAll();
+
+    List<KichThuoc> findByName(String tenSize);
 }

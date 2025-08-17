@@ -29,4 +29,21 @@ public class KichThuoc {
         this.tenSize = tenSize;
     }
 
+    @Override
+    public String toString() {
+        return tenSize != null ? tenSize : "Chưa có kích thước";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        KichThuoc kichThuoc = (KichThuoc) obj;
+        return id != null && id.equals(kichThuoc.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
 }

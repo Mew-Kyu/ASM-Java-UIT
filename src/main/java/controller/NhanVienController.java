@@ -15,6 +15,10 @@ public class NhanVienController {
         return dao.findAll();
     }
 
+    public List<NhanVien> layDanhSachNhanVien() {
+        return dao.findAll();
+    }
+
     public void addNhanVien(NhanVien nv) {
         dao.insert(nv);
     }
@@ -25,5 +29,9 @@ public class NhanVienController {
 
     public void deleteNhanVien(int id) {
         dao.delete(id);
+    }
+
+    public NhanVien getNhanVienById(int id) {
+        return dao.findById(id);
     }
 }

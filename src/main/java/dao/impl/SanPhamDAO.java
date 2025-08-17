@@ -63,12 +63,43 @@ public class SanPhamDAO implements ISanPhamDAO {
     @Override
     public SanPham findById(int maSP) {
         EntityManager em = emf.createEntityManager();
-        return em.find(SanPham.class, maSP);
+        try {
+            return em.find(SanPham.class, maSP);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public List<SanPham> findAll() {
         EntityManager em = emf.createEntityManager();
-        return em.createQuery("SELECT s FROM SanPham s", SanPham.class).getResultList();
+        try {
+            TypedQuery<SanPham> query = em.createQuery("SELECT s FROM SanPham s", SanPham.class);
+            return query.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        } finally {
+            em.close();
+        }
+    }
+
+    @Override
+    public List<SanPham> findByName(String tenSP) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            TypedQuery<SanPham> query = em.createQuery(
+                "SELECT s FROM SanPham s WHERE s.tenSP LIKE :tenSP", SanPham.class);
+            query.setParameter("tenSP", "%" + tenSP + "%");
+            return query.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        } finally {
+            em.close();
+        }
     }
 }

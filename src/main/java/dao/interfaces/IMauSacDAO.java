@@ -9,4 +9,6 @@ public interface IMauSacDAO {
     void delete(int maMau);
     MauSac findById(int maMau);
     List<MauSac> findAll();
+
+    List<MauSac> findByName(String tenMau);
 }

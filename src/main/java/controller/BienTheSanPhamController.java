@@ -27,4 +27,25 @@ public class BienTheSanPhamController {
     public List<BienTheSanPham> getAllBienTheSanPham() {
         return dao.findAll();
     }
+
+    // Additional methods for consistency with the new UI
+    public List<BienTheSanPham> getAll() {
+        return dao.findAll();
+    }
+
+    public BienTheSanPham getById(int id) {
+        return dao.findById(id);
+    }
+
+    public void update(BienTheSanPham bts) {
+        dao.update(bts);
+    }
+
+    public void insert(BienTheSanPham bts) {
+        dao.insert(bts);
+    }
+
+    public void delete(int id) {
+        dao.delete(id);
+    }
 }

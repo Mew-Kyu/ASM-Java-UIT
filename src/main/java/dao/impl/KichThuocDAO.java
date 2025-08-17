@@ -63,12 +63,43 @@ public class KichThuocDAO implements IKichThuocDAO {
     @Override
     public KichThuoc findById(int maSize) {
         EntityManager em = emf.createEntityManager();
-        return em.find(KichThuoc.class, maSize);
+        try {
+            return em.find(KichThuoc.class, maSize);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public List<KichThuoc> findAll() {
         EntityManager em = emf.createEntityManager();
-        return em.createQuery("SELECT kt FROM KichThuoc kt", KichThuoc.class).getResultList();
+        try {
+            TypedQuery<KichThuoc> query = em.createQuery("SELECT k FROM KichThuoc k", KichThuoc.class);
+            return query.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        } finally {
+            em.close();
+        }
+    }
+
+    @Override
+    public List<KichThuoc> findByName(String tenSize) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            TypedQuery<KichThuoc> query = em.createQuery(
+                "SELECT k FROM KichThuoc k WHERE k.tenSize LIKE :tenSize", KichThuoc.class);
+            query.setParameter("tenSize", "%" + tenSize + "%");
+            return query.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        } finally {
+            em.close();
+        }
     }
 }

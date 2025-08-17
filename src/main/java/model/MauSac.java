@@ -29,4 +29,21 @@ public class MauSac {
         this.tenMau = tenMau;
     }
 
+    @Override
+    public String toString() {
+        return tenMau != null ? tenMau : "Chưa có tên màu";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        MauSac mauSac = (MauSac) obj;
+        return id != null && id.equals(mauSac.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
 }

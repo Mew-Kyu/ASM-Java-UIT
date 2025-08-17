@@ -10,4 +10,6 @@ public interface  ISanPhamDAO {
     void delete(int maSP);
     SanPham findById(int maSP);
     List<SanPham> findAll();
+
+    List<SanPham> findByName(String tenSP);
 }

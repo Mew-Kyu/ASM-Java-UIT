@@ -1,7 +1,12 @@
 package view;
 
+import controller.BienTheSanPhamController;
+import controller.ChiTietHoaDonController;
 import controller.HoaDonController;
-import model.HoaDon;
+import controller.KhachHangController;
+import controller.NhanVienController;
+import model.*;
+import util.SessionManager;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -10,171 +15,474 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
 public class HoaDonUI extends JFrame {
     private JTextField txtMaHD, txtNgayLap, txtTongTien;
-    private JButton btnAdd, btnUpdate, btnDelete, btnRefresh;
-    private JTable table;
-    private DefaultTableModel tableModel;
-    private HoaDonController controller;
+    private JComboBox<KhachHang> cboKhachHang;
+    private JComboBox<NhanVien> cboNhanVien;
+    private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnViewDetails, btnAddDetail;
+    private JTable tableHoaDon;
+    private DefaultTableModel tableModelHoaDon;
+
+    private HoaDonController hoaDonController;
+    private KhachHangController khachHangController;
+    private NhanVienController nhanVienController;
+    private ChiTietHoaDonController chiTietController;
+    private BienTheSanPhamController bienTheController;
+
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public HoaDonUI() {
-        controller = new HoaDonController();
+        initControllers();
         setTitle("Quản Lý Hóa Đơn");
-        setSize(600, 400);
+        setSize(900, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         initComponents();
-        loadTable();
+        loadData();
+    }
+
+    private void initControllers() {
+        hoaDonController = new HoaDonController();
+        khachHangController = new KhachHangController();
+        nhanVienController = new NhanVienController();
+        chiTietController = new ChiTietHoaDonController();
+        bienTheController = new BienTheSanPhamController();
     }
 
     private void initComponents() {
-        JPanel panelInput = new JPanel(new GridLayout(3, 2, 5, 5));
-        panelInput.setBorder(BorderFactory.createTitledBorder("Thông tin hóa đơn"));
-        panelInput.add(new JLabel("Mã HĐ:"));
-        txtMaHD = new JTextField();
+        // Main layout
+        setLayout(new BorderLayout(10, 10));
+
+        // Top panel - Input form
+        JPanel topPanel = createInputPanel();
+        add(topPanel, BorderLayout.NORTH);
+
+        // Center panel - Table
+        JPanel centerPanel = createTablePanel();
+        add(centerPanel, BorderLayout.CENTER);
+
+        // Bottom panel - Buttons
+        JPanel bottomPanel = createButtonPanel();
+        add(bottomPanel, BorderLayout.SOUTH);
+
+        setupEventHandlers();
+    }
+
+    private JPanel createInputPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("Thông tin hóa đơn"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        // Row 1
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel.add(new JLabel("Mã HĐ:"), gbc);
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtMaHD = new JTextField(10);
         txtMaHD.setEditable(false);
-        panelInput.add(txtMaHD);
-        panelInput.add(new JLabel("Ngày lập (yyyy-MM-dd):"));
-        txtNgayLap = new JTextField();
-        panelInput.add(txtNgayLap);
-        panelInput.add(new JLabel("Tổng tiền:"));
-        txtTongTien = new JTextField();
-        panelInput.add(txtTongTien);
+        panel.add(txtMaHD, gbc);
 
-        JPanel panelButtons = new JPanel(new FlowLayout());
-        btnAdd = new JButton("Thêm");
-        btnUpdate = new JButton("Cập nhật");
-        btnDelete = new JButton("Xóa");
-        btnRefresh = new JButton("Làm mới");
-        panelButtons.add(btnAdd);
-        panelButtons.add(btnUpdate);
-        panelButtons.add(btnDelete);
-        panelButtons.add(btnRefresh);
+        gbc.gridx = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        panel.add(new JLabel("Ngày lập:"), gbc);
+        gbc.gridx = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtNgayLap = new JTextField(10);
+        txtNgayLap.setText(LocalDate.now().format(dateFormatter));
+        panel.add(txtNgayLap, gbc);
 
-        tableModel = new DefaultTableModel(new Object[]{"Mã HĐ", "Ngày lập", "Tổng tiền"}, 0) {
+        // Row 2
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        panel.add(new JLabel("Khách hàng:"), gbc);
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        cboKhachHang = new JComboBox<>();
+        cboKhachHang.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof KhachHang) {
+                    KhachHang kh = (KhachHang) value;
+                    setText(kh.getHoTen() + " - " + kh.getDienThoai());
+                } else if (value == null) {
+                    setText("Khách lẻ");
+                }
+                return this;
+            }
+        });
+        panel.add(cboKhachHang, gbc);
+
+        gbc.gridx = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        panel.add(new JLabel("Nhân viên:"), gbc);
+        gbc.gridx = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        cboNhanVien = new JComboBox<>();
+        cboNhanVien.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof NhanVien) {
+                    NhanVien nv = (NhanVien) value;
+                    setText(nv.getHoTen() + " - " + nv.getChucVu());
+                }
+                return this;
+            }
+        });
+        panel.add(cboNhanVien, gbc);
+
+        // Row 3
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        panel.add(new JLabel("Tổng tiền:"), gbc);
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtTongTien = new JTextField(10);
+        txtTongTien.setEditable(false);
+        txtTongTien.setBackground(Color.LIGHT_GRAY);
+        panel.add(txtTongTien, gbc);
+
+        return panel;
+    }
+
+    private JPanel createTablePanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("Danh sách hóa đơn"));
+
+        tableModelHoaDon = new DefaultTableModel(
+                new Object[]{"Mã HĐ", "Ngày lập", "Khách hàng", "Nhân viên", "Tổng tiền", "Số items"}, 0) {
+            @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
-        table = new JTable(tableModel);
-        JScrollPane scrollPane = new JScrollPane(table);
 
-        setLayout(new BorderLayout(5, 5));
-        add(panelInput, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
-        add(panelButtons, BorderLayout.SOUTH);
+        tableHoaDon = new JTable(tableModelHoaDon);
+        tableHoaDon.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tableHoaDon.getTableHeader().setReorderingAllowed(false);
 
-        // Event listeners
-        btnAdd.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                addHoaDon();
-            }
+        // Set column widths
+        tableHoaDon.getColumnModel().getColumn(0).setPreferredWidth(60);  // Mã HĐ
+        tableHoaDon.getColumnModel().getColumn(1).setPreferredWidth(100); // Ngày lập
+        tableHoaDon.getColumnModel().getColumn(2).setPreferredWidth(150); // Khách hàng
+        tableHoaDon.getColumnModel().getColumn(3).setPreferredWidth(150); // Nhân viên
+        tableHoaDon.getColumnModel().getColumn(4).setPreferredWidth(120); // Tổng tiền
+        tableHoaDon.getColumnModel().getColumn(5).setPreferredWidth(80);  // Số items
+
+        JScrollPane scrollPane = new JScrollPane(tableHoaDon);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private JPanel createButtonPanel() {
+        JPanel panel = new JPanel(new FlowLayout());
+
+        btnAdd = new JButton("Thêm mới");
+        btnUpdate = new JButton("Cập nhật");
+        btnDelete = new JButton("Xóa");
+        btnViewDetails = new JButton("Xem chi tiết");
+        btnAddDetail = new JButton("Thêm sản phẩm");
+        btnRefresh = new JButton("Làm mới");
+
+        panel.add(btnAdd);
+        panel.add(btnUpdate);
+        panel.add(btnDelete);
+        panel.add(Box.createHorizontalStrut(10));
+        panel.add(btnViewDetails);
+        panel.add(btnAddDetail);
+        panel.add(Box.createHorizontalStrut(10));
+        panel.add(btnRefresh);
+
+        return panel;
+    }
+
+    private void setupEventHandlers() {
+        btnAdd.addActionListener(e -> addHoaDon());
+        btnUpdate.addActionListener(e -> updateHoaDon());
+        btnDelete.addActionListener(e -> deleteHoaDon());
+        btnViewDetails.addActionListener(e -> viewHoaDonDetails());
+        btnAddDetail.addActionListener(e -> addProductToHoaDon());
+        btnRefresh.addActionListener(e -> {
+            clearFields();
+            loadData();
         });
-        btnUpdate.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                updateHoaDon();
-            }
-        });
-        btnDelete.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                deleteHoaDon();
-            }
-        });
-        btnRefresh.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                clearFields();
-                loadTable();
-            }
-        });
-        table.getSelectionModel().addListSelectionListener(e -> {
+
+        tableHoaDon.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 fillFieldsFromTable();
             }
         });
     }
 
-    private void loadTable() {
-        tableModel.setRowCount(0);
-        List<HoaDon> list = controller.getAllHoaDon();
-        for (HoaDon hd : list) {
-            tableModel.addRow(new Object[]{hd.getId(), hd.getNgayLap(), hd.getTongTien()});
+    private void loadData() {
+        loadHoaDonTable();
+        loadComboBoxes();
+    }
+
+    private void loadHoaDonTable() {
+        tableModelHoaDon.setRowCount(0);
+        try {
+            List<HoaDon> list = hoaDonController.getAllHoaDon();
+            for (HoaDon hd : list) {
+                Object[] row = {
+                        hd.getId(),
+                        hd.getNgayLap().format(dateFormatter),
+                        hd.getMaKH() != null ? hd.getMaKH().getHoTen() : "Khách lẻ",
+                        hd.getMaNV() != null ? hd.getMaNV().getHoTen() : "N/A",
+                        String.format("%,.0f VNĐ", hd.getTongTien()),
+                        hd.getTotalItems()
+                };
+                tableModelHoaDon.addRow(row);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải dữ liệu: " + e.getMessage());
+        }
+    }
+
+    private void loadComboBoxes() {
+        try {
+            // Load customers
+            cboKhachHang.removeAllItems();
+            cboKhachHang.addItem(null); // For "Khách lẻ"
+            List<KhachHang> khachHangs = khachHangController.layDanhSachKhachHang();
+            for (KhachHang kh : khachHangs) {
+                cboKhachHang.addItem(kh);
+            }
+
+            // Load employees
+            cboNhanVien.removeAllItems();
+            List<NhanVien> nhanViens = nhanVienController.layDanhSachNhanVien();
+            for (NhanVien nv : nhanViens) {
+                cboNhanVien.addItem(nv);
+            }
+
+            // Set current user as default employee
+            try {
+                TaiKhoan currentUser = SessionManager.getInstance().getCurrentUser();
+                if (currentUser != null && currentUser.getMaNV() != null) {
+                    cboNhanVien.setSelectedItem(currentUser.getMaNV());
+                }
+            } catch (Exception ex) {
+                // If there's an issue with current user, just continue without setting default
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải combo box: " + e.getMessage());
         }
     }
 
     private void addHoaDon() {
         try {
-            LocalDate ngayLap = LocalDate.parse(txtNgayLap.getText().trim());
-            BigDecimal tongTien = new BigDecimal(txtTongTien.getText().trim());
-            HoaDon hd = new HoaDon();
-            hd.setNgayLap(ngayLap);
-            hd.setTongTien(tongTien);
-            controller.addHoaDon(hd);
+            LocalDate ngayLap = parseDate(txtNgayLap.getText().trim());
+            KhachHang khachHang = (KhachHang) cboKhachHang.getSelectedItem();
+            NhanVien nhanVien = (NhanVien) cboNhanVien.getSelectedItem();
+
+            if (nhanVien == null) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên!");
+                return;
+            }
+
+            HoaDon hd = new HoaDon(ngayLap, khachHang, nhanVien);
+            hoaDonController.addHoaDon(hd);
+
             JOptionPane.showMessageDialog(this, "Thêm hóa đơn thành công!");
             clearFields();
-            loadTable();
+            loadHoaDonTable();
+
         } catch (DateTimeParseException ex) {
-            JOptionPane.showMessageDialog(this, "Ngày lập không hợp lệ! (yyyy-MM-dd)");
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Tổng tiền không hợp lệ!");
+            JOptionPane.showMessageDialog(this, "Ngày lập không hợp lệ! Định dạng: dd/MM/yyyy");
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
         }
     }
 
     private void updateHoaDon() {
         try {
+            if (txtMaHD.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn hóa đơn để cập nhật!");
+                return;
+            }
+
             int id = Integer.parseInt(txtMaHD.getText().trim());
-            LocalDate ngayLap = LocalDate.parse(txtNgayLap.getText().trim());
-            BigDecimal tongTien = new BigDecimal(txtTongTien.getText().trim());
-            HoaDon hd = new HoaDon();
-            hd.setId(id);
+            HoaDon hd = hoaDonController.getHoaDonById(id);
+
+            if (hd == null) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn!");
+                return;
+            }
+
+            LocalDate ngayLap = parseDate(txtNgayLap.getText().trim());
+            KhachHang khachHang = (KhachHang) cboKhachHang.getSelectedItem();
+            NhanVien nhanVien = (NhanVien) cboNhanVien.getSelectedItem();
+
+            if (nhanVien == null) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên!");
+                return;
+            }
+
             hd.setNgayLap(ngayLap);
-            hd.setTongTien(tongTien);
-            controller.updateHoaDon(hd);
+            hd.setMaKH(khachHang);
+            hd.setMaNV(nhanVien);
+
+            hoaDonController.updateHoaDon(hd);
+
             JOptionPane.showMessageDialog(this, "Cập nhật hóa đơn thành công!");
             clearFields();
-            loadTable();
+            loadHoaDonTable();
+
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn hóa đơn để cập nhật!");
+            JOptionPane.showMessageDialog(this, "Mã hóa đơn không hợp lệ!");
         } catch (DateTimeParseException ex) {
-            JOptionPane.showMessageDialog(this, "Ngày lập không hợp lệ! (yyyy-MM-dd)");
+            JOptionPane.showMessageDialog(this, "Ngày lập không hợp lệ! Định dạng: dd/MM/yyyy");
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
         }
     }
 
     private void deleteHoaDon() {
         try {
+            if (txtMaHD.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn hóa đơn để xóa!");
+                return;
+            }
+
             int id = Integer.parseInt(txtMaHD.getText().trim());
-            int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa hóa đơn này?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "Bạn có chắc muốn xóa hóa đơn này?\nToàn bộ chi tiết hóa đơn cũng sẽ bị xóa!",
+                    "Xác nhận xóa",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+
             if (confirm == JOptionPane.YES_OPTION) {
-                controller.deleteHoaDon(id);
+                hoaDonController.deleteHoaDon(id);
                 JOptionPane.showMessageDialog(this, "Xóa hóa đơn thành công!");
                 clearFields();
-                loadTable();
+                loadHoaDonTable();
             }
+
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn hóa đơn để xóa!");
+            JOptionPane.showMessageDialog(this, "M�� hóa đơn không hợp lệ!");
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+        }
+    }
+
+    private void viewHoaDonDetails() {
+        try {
+            if (txtMaHD.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn hóa đơn để xem chi tiết!");
+                return;
+            }
+
+            int id = Integer.parseInt(txtMaHD.getText().trim());
+            HoaDon hoaDon = hoaDonController.getHoaDonById(id);
+
+            if (hoaDon == null) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn!");
+                return;
+            }
+
+            // Open detail dialog
+            ChiTietHoaDonDialog dialog = new ChiTietHoaDonDialog(this, hoaDon);
+            dialog.setVisible(true);
+
+            // Refresh table after dialog closes
+            loadHoaDonTable();
+            fillFieldsFromTable();
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Mã hóa đơn không hợp lệ!");
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+        }
+    }
+
+    private void addProductToHoaDon() {
+        try {
+            if (txtMaHD.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn hóa đơn để thêm sản phẩm!");
+                return;
+            }
+
+            int id = Integer.parseInt(txtMaHD.getText().trim());
+            HoaDon hoaDon = hoaDonController.getHoaDonById(id);
+
+            if (hoaDon == null) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn!");
+                return;
+            }
+
+            // Open product selection dialog
+            ThemSanPhamDialog dialog = new ThemSanPhamDialog(this, hoaDon);
+            dialog.setVisible(true);
+
+            // Refresh table after dialog closes
+            loadHoaDonTable();
+            fillFieldsFromTable();
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Mã hóa đơn không hợp lệ!");
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
         }
     }
 
     private void clearFields() {
         txtMaHD.setText("");
-        txtNgayLap.setText("");
+        txtNgayLap.setText(LocalDate.now().format(dateFormatter));
         txtTongTien.setText("");
-        table.clearSelection();
+        cboKhachHang.setSelectedIndex(0);
+        if (cboNhanVien.getItemCount() > 0) {
+            try {
+                TaiKhoan currentUser = SessionManager.getInstance().getCurrentUser();
+                if (currentUser != null && currentUser.getMaNV() != null) {
+                    cboNhanVien.setSelectedItem(currentUser.getMaNV());
+                } else {
+                    cboNhanVien.setSelectedIndex(0);
+                }
+            } catch (Exception ex) {
+                cboNhanVien.setSelectedIndex(0);
+            }
+        }
+        tableHoaDon.clearSelection();
     }
 
     private void fillFieldsFromTable() {
-        int row = table.getSelectedRow();
+        int row = tableHoaDon.getSelectedRow();
         if (row >= 0) {
-            txtMaHD.setText(table.getValueAt(row, 0).toString());
-            txtNgayLap.setText(table.getValueAt(row, 1).toString());
-            txtTongTien.setText(table.getValueAt(row, 2).toString());
+            try {
+                int id = (Integer) tableModelHoaDon.getValueAt(row, 0);
+                HoaDon hd = hoaDonController.getHoaDonById(id);
+
+                if (hd != null) {
+                    txtMaHD.setText(String.valueOf(hd.getId()));
+                    txtNgayLap.setText(hd.getNgayLap().format(dateFormatter));
+                    txtTongTien.setText(String.format("%,.0f VNĐ", hd.getTongTien()));
+                    cboKhachHang.setSelectedItem(hd.getMaKH());
+                    cboNhanVien.setSelectedItem(hd.getMaNV());
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi tải thông tin hóa đơn: " + e.getMessage());
+            }
         }
+    }
+
+    private LocalDate parseDate(String dateStr) throws DateTimeParseException {
+        return LocalDate.parse(dateStr, dateFormatter);
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new HoaDonUI().setVisible(true));
     }
 }
-

@@ -63,12 +63,43 @@ public class MauSacDAO implements IMauSacDAO {
     @Override
     public MauSac findById(int maMau) {
         EntityManager em = emf.createEntityManager();
-        return em.find(MauSac.class, maMau);
+        try {
+            return em.find(MauSac.class, maMau);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public List<MauSac> findAll() {
         EntityManager em = emf.createEntityManager();
-        return em.createQuery("SELECT ms FROM MauSac ms", MauSac.class).getResultList();
+        try {
+            TypedQuery<MauSac> query = em.createQuery("SELECT m FROM MauSac m", MauSac.class);
+            return query.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        } finally {
+            em.close();
+        }
+    }
+
+    @Override
+    public List<MauSac> findByName(String tenMau) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            TypedQuery<MauSac> query = em.createQuery(
+                "SELECT m FROM MauSac m WHERE m.tenMau LIKE :tenMau", MauSac.class);
+            query.setParameter("tenMau", "%" + tenMau + "%");
+            return query.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return List.of();
+        } finally {
+            em.close();
+        }
     }
 }

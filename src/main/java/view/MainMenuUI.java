@@ -5,8 +5,6 @@ import util.RoleManager;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -114,7 +112,7 @@ public class MainMenuUI extends JFrame {
             btnSanPham.addActionListener(e -> openSanPhamUI());
             menuPanel.add(btnSanPham);
 
-            JButton btnBienThe = createMenuButton("Quản Lý Biến Thể", "icons/variant.png");
+            JButton btnBienThe = createMenuButton("Quản Lý Kho Hàng", "icons/variant.png");
             btnBienThe.addActionListener(e -> openBienTheUI());
             menuPanel.add(btnBienThe);
 
@@ -217,7 +215,7 @@ public class MainMenuUI extends JFrame {
             RoleManager.showAccessDeniedMessage(this);
             return;
         }
-        new BienTheSanPhamUI().setVisible(true);
+        new KhoHangUI().setVisible(true);
     }
 
     private void logout() {

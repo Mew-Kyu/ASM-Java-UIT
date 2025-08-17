@@ -77,4 +77,21 @@ public class SanPham {
         this.moTa = moTa;
     }
 
+    @Override
+    public String toString() {
+        return tenSP != null ? tenSP : "Chưa có tên";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        SanPham sanPham = (SanPham) obj;
+        return id != null && id.equals(sanPham.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
 }
