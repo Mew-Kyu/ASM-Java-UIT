@@ -2,6 +2,7 @@ package view;
 
 import controller.BienTheSanPhamController;
 import controller.ChiTietHoaDonController;
+import controller.HoaDonController;
 import model.*;
 
 import javax.swing.*;
@@ -16,6 +17,7 @@ public class ThemSanPhamDialog extends JDialog {
     private HoaDon hoaDon;
     private BienTheSanPhamController bienTheController;
     private ChiTietHoaDonController chiTietController;
+    private HoaDonController hoaDonController;
 
     private JTable tableBienThe;
     private DefaultTableModel tableModel;
@@ -28,6 +30,7 @@ public class ThemSanPhamDialog extends JDialog {
         this.hoaDon = hoaDon;
         this.bienTheController = new BienTheSanPhamController();
         this.chiTietController = new ChiTietHoaDonController();
+        this.hoaDonController = new HoaDonController();
 
         initComponents();
         loadData();
@@ -66,6 +69,7 @@ public class ThemSanPhamDialog extends JDialog {
         searchPanel.add(txtTimKiem);
 
         btnTimKiem = new JButton("Tìm kiếm");
+        btnTimKiem.setPreferredSize(new Dimension(100, 30));
         searchPanel.add(btnTimKiem);
 
         panel.add(searchPanel, BorderLayout.NORTH);
@@ -124,6 +128,7 @@ public class ThemSanPhamDialog extends JDialog {
 
         btnThem = new JButton("Thêm vào hóa đơn");
         btnThem.setIcon(new ImageIcon());
+        btnThem.setPreferredSize(new Dimension(160, 30));
         inputPanel.add(btnThem);
 
         panel.add(inputPanel, BorderLayout.WEST);
@@ -132,6 +137,7 @@ public class ThemSanPhamDialog extends JDialog {
         JPanel buttonPanel = new JPanel(new FlowLayout());
         btnDong = new JButton("Đóng");
         btnDong.setIcon(new ImageIcon());
+        btnDong.setPreferredSize(new Dimension(80, 30));
         buttonPanel.add(btnDong);
 
         panel.add(buttonPanel, BorderLayout.EAST);
@@ -270,6 +276,10 @@ public class ThemSanPhamDialog extends JDialog {
                 chiTietController.add(chiTiet);
                 JOptionPane.showMessageDialog(this, "Đã thêm sản phẩm vào hóa đơn!");
             }
+            
+            // IMPORTANT: Recalculate and update invoice total
+            hoaDon.calculateTongTien();
+            hoaDonController.updateHoaDon(hoaDon);
 
             // Update stock in BienTheSanPham
             bienThe.decreaseStock(soLuongThem);

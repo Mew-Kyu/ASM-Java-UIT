@@ -18,12 +18,14 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.io.File;
+import util.PDFInvoiceGenerator;
 
 public class HoaDonUI extends JFrame {
     private JTextField txtMaHD, txtNgayLap, txtTongTien;
     private JComboBox<KhachHang> cboKhachHang;
     private JComboBox<NhanVien> cboNhanVien;
-    private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnViewDetails, btnAddDetail;
+    private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnViewDetails, btnAddDetail, btnPrintPDF;
     private JTable tableHoaDon;
     private DefaultTableModel tableModelHoaDon;
 
@@ -189,11 +191,19 @@ public class HoaDonUI extends JFrame {
         JPanel panel = new JPanel(new FlowLayout());
 
         btnAdd = new JButton("Thêm mới");
+        btnAdd.setPreferredSize(new Dimension(110, 30));
         btnUpdate = new JButton("Cập nhật");
+        btnUpdate.setPreferredSize(new Dimension(100, 30));
         btnDelete = new JButton("Xóa");
+        btnDelete.setPreferredSize(new Dimension(80, 30));
         btnViewDetails = new JButton("Xem chi tiết");
+        btnViewDetails.setPreferredSize(new Dimension(120, 30));
         btnAddDetail = new JButton("Thêm sản phẩm");
+        btnAddDetail.setPreferredSize(new Dimension(140, 30));
         btnRefresh = new JButton("Làm mới");
+        btnRefresh.setPreferredSize(new Dimension(100, 30));
+        btnPrintPDF = new JButton("In PDF");
+        btnPrintPDF.setPreferredSize(new Dimension(100, 30));
 
         panel.add(btnAdd);
         panel.add(btnUpdate);
@@ -203,6 +213,7 @@ public class HoaDonUI extends JFrame {
         panel.add(btnAddDetail);
         panel.add(Box.createHorizontalStrut(10));
         panel.add(btnRefresh);
+        panel.add(btnPrintPDF);
 
         return panel;
     }
@@ -217,6 +228,7 @@ public class HoaDonUI extends JFrame {
             clearFields();
             loadData();
         });
+        btnPrintPDF.addActionListener(e -> printInvoiceToPDF());
 
         tableHoaDon.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -480,6 +492,74 @@ public class HoaDonUI extends JFrame {
 
     private LocalDate parseDate(String dateStr) throws DateTimeParseException {
         return LocalDate.parse(dateStr, dateFormatter);
+    }
+    
+    private void printInvoiceToPDF() {
+        try {
+            if (txtMaHD.getText().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn hóa đơn để in!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            int hoaDonId = Integer.parseInt(txtMaHD.getText().trim());
+            HoaDon hoaDon = hoaDonController.getHoaDonById(hoaDonId);
+            
+            if (hoaDon == null) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            // Open file chooser for save location
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Chọn nơi lưu file PDF");
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("PDF Files", "pdf"));
+            fileChooser.setSelectedFile(new File("HoaDon_" + hoaDonId + ".pdf"));
+            
+            int userSelection = fileChooser.showSaveDialog(this);
+            
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fileChooser.getSelectedFile();
+                String filePath = fileToSave.getAbsolutePath();
+                
+                // Ensure file has .pdf extension
+                if (!filePath.toLowerCase().endsWith(".pdf")) {
+                    filePath += ".pdf";
+                }
+                
+                // Generate PDF
+                PDFInvoiceGenerator.generateInvoicePDF(hoaDon, filePath);
+                
+                JOptionPane.showMessageDialog(this, 
+                    "Đã in hóa đơn thành công!\nFile được lưu tại: " + filePath, 
+                    "Thành công", 
+                    JOptionPane.INFORMATION_MESSAGE);
+                
+                // Ask if user wants to open the PDF
+                int openFile = JOptionPane.showConfirmDialog(this, 
+                    "Bạn có muốn mở file PDF vừa tạo không?", 
+                    "Mở file", 
+                    JOptionPane.YES_NO_OPTION);
+                
+                if (openFile == JOptionPane.YES_OPTION) {
+                    try {
+                        if (Desktop.isDesktopSupported()) {
+                            Desktop.getDesktop().open(new File(filePath));
+                        }
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(this, 
+                            "Không thể mở file PDF. Vui lòng mở thủ công tại: " + filePath, 
+                            "Thông báo", 
+                            JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+            }
+            
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Mã hóa đơn không hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi tạo PDF: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {

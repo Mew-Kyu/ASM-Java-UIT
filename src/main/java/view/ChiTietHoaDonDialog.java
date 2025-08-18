@@ -1,6 +1,7 @@
 package view;
 
 import controller.ChiTietHoaDonController;
+import controller.HoaDonController;
 import model.ChiTietHoaDon;
 import model.HoaDon;
 
@@ -16,6 +17,7 @@ import java.util.List;
 public class ChiTietHoaDonDialog extends JDialog {
     private HoaDon hoaDon;
     private ChiTietHoaDonController controller;
+    private HoaDonController hoaDonController;
     private JTable table;
     private DefaultTableModel tableModel;
     private JLabel lblHoaDonInfo;
@@ -27,6 +29,7 @@ public class ChiTietHoaDonDialog extends JDialog {
         super(parent, "Chi Tiết Hóa Đơn #" + hoaDon.getId(), true);
         this.hoaDon = hoaDon;
         this.controller = new ChiTietHoaDonController();
+        this.hoaDonController = new HoaDonController();
 
         initComponents();
         loadData();
@@ -101,12 +104,15 @@ public class ChiTietHoaDonDialog extends JDialog {
 
         btnDelete = new JButton("Xóa sản phẩm");
         btnDelete.setIcon(new ImageIcon());
+        btnDelete.setPreferredSize(new Dimension(130, 30));
 
         btnRefresh = new JButton("Làm mới");
         btnRefresh.setIcon(new ImageIcon());
+        btnRefresh.setPreferredSize(new Dimension(100, 30));
 
         btnClose = new JButton("Đóng");
         btnClose.setIcon(new ImageIcon());
+        btnClose.setPreferredSize(new Dimension(80, 30));
 
         panel.add(btnDelete);
         panel.add(btnRefresh);
@@ -196,6 +202,11 @@ public class ChiTietHoaDonDialog extends JDialog {
 
                 if (confirm == JOptionPane.YES_OPTION) {
                     controller.delete(selectedDetail.getId());
+                    
+                    // Recalculate and update invoice total
+                    hoaDon.calculateTongTien();
+                    hoaDonController.updateHoaDon(hoaDon);
+                    
                     JOptionPane.showMessageDialog(this, "Đã xóa sản phẩm khỏi hóa đơn!");
                     loadData();
                 }
@@ -225,6 +236,11 @@ public class ChiTietHoaDonDialog extends JDialog {
                     if (newQuantity > 0) {
                         selectedDetail.setSoLuong(newQuantity);
                         controller.update(selectedDetail);
+                        
+                        // Recalculate and update invoice total
+                        hoaDon.calculateTongTien();
+                        hoaDonController.updateHoaDon(hoaDon);
+                        
                         JOptionPane.showMessageDialog(this, "Đã cập nhật số lượng!");
                         loadData();
                     } else {

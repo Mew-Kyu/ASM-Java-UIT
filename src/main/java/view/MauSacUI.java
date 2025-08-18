@@ -62,9 +62,13 @@ public class MauSacUI extends JFrame {
 
         JPanel buttonPanel = new JPanel();
         btnAdd = new JButton("Thêm");
+        btnAdd.setPreferredSize(new Dimension(80, 30));
         btnUpdate = new JButton("Sửa");
+        btnUpdate.setPreferredSize(new Dimension(80, 30));
         btnDelete = new JButton("Xóa");
+        btnDelete.setPreferredSize(new Dimension(80, 30));
         btnRefresh = new JButton("Làm mới");
+        btnRefresh.setPreferredSize(new Dimension(100, 30));
         buttonPanel.add(btnAdd);
         buttonPanel.add(btnUpdate);
         buttonPanel.add(btnDelete);

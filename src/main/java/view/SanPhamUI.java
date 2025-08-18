@@ -50,11 +50,17 @@ public class SanPhamUI extends JFrame {
 
         // Initialize buttons first
         btnAdd = new JButton("Thêm");
+        btnAdd.setPreferredSize(new Dimension(80, 30));
         btnUpdate = new JButton("Sửa");
+        btnUpdate.setPreferredSize(new Dimension(80, 30));
         btnDelete = new JButton("Xóa");
+        btnDelete.setPreferredSize(new Dimension(80, 30));
         btnRefresh = new JButton("Làm mới");
+        btnRefresh.setPreferredSize(new Dimension(100, 30));
         btnSearch = new JButton("Tìm kiếm");
+        btnSearch.setPreferredSize(new Dimension(100, 30));
         btnClear = new JButton("Xóa tìm kiếm");
+        btnClear.setPreferredSize(new Dimension(120, 30));
 
         // Create search panel
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));

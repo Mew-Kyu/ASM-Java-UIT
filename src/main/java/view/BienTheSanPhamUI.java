@@ -16,6 +16,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.math.BigDecimal;
 import java.util.List;
+import java.text.Normalizer;
+import java.util.regex.Pattern;
 
 public class BienTheSanPhamUI extends JFrame {
     private JTable table;
@@ -77,12 +79,19 @@ public class BienTheSanPhamUI extends JFrame {
 
         // Buttons with icons and enhanced functionality
         btnAdd = new JButton("Thêm Sản Phẩm");
+        btnAdd.setPreferredSize(new Dimension(140, 30));
         btnUpdate = new JButton("Cập Nhật");
+        btnUpdate.setPreferredSize(new Dimension(100, 30));
         btnDelete = new JButton("Xóa");
+        btnDelete.setPreferredSize(new Dimension(80, 30));
         btnRefresh = new JButton("Làm Mới");
+        btnRefresh.setPreferredSize(new Dimension(100, 30));
         btnStockIn = new JButton("Nhập Kho");
+        btnStockIn.setPreferredSize(new Dimension(100, 30));
         btnStockOut = new JButton("Xuất Kho");
+        btnStockOut.setPreferredSize(new Dimension(100, 30));
         btnLowStock = new JButton("Hàng Sắp Hết");
+        btnLowStock.setPreferredSize(new Dimension(120, 30));
 
         // Statistics labels
         lblTotalItems = new JLabel("Tổng số mặt hàng: 0");
@@ -269,6 +278,10 @@ public class BienTheSanPhamUI extends JFrame {
     }
 
     private void loadSelectedItem(int row) {
+        if (row < 0 || row >= table.getRowCount()) {
+            return; // Invalid row index, do nothing
+        }
+        
         int modelRow = table.convertRowIndexToModel(row);
         Integer id = (Integer) tableModel.getValueAt(modelRow, 0);
         BienTheSanPham bts = dao.findById(id);
@@ -288,7 +301,65 @@ public class BienTheSanPhamUI extends JFrame {
         if (text.isEmpty()) {
             rowSorter.setRowFilter(null);
         } else {
-            rowSorter.setRowFilter(RowFilter.regexFilter("(?i)" + text));
+            // Create a custom RowFilter that supports Vietnamese search
+            rowSorter.setRowFilter(new VietnameseRowFilter(text));
+        }
+    }
+    
+    /**
+     * Removes Vietnamese diacritics (accent marks) from text
+     * Converts "áàảãạ" to "a", "éèẻẽẹ" to "e", etc.
+     */
+    private String removeVietnameseDiacritics(String text) {
+        if (text == null) return "";
+        
+        // Normalize to decomposed form (NFD) - separates base characters from diacritics
+        String normalized = Normalizer.normalize(text, Normalizer.Form.NFD);
+        
+        // Remove diacritical marks (combining diacritical marks Unicode category)
+        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        String withoutDiacritics = pattern.matcher(normalized).replaceAll("");
+        
+        // Handle special Vietnamese characters that don't decompose properly
+        withoutDiacritics = withoutDiacritics
+            .replace("đ", "d").replace("Đ", "D")  // Handle đ/Đ specifically
+            .replace("ư", "u").replace("Ư", "U")  // Handle ư/Ư specifically  
+            .replace("ơ", "o").replace("Ơ", "O"); // Handle ơ/Ơ specifically
+            
+        return withoutDiacritics;
+    }
+    
+    /**
+     * Custom RowFilter that supports Vietnamese diacritic-insensitive search
+     */
+    private class VietnameseRowFilter extends RowFilter<DefaultTableModel, Object> {
+        private final String searchText;
+        private final String searchTextNoDiacritics;
+        
+        public VietnameseRowFilter(String searchText) {
+            this.searchText = searchText.toLowerCase();
+            this.searchTextNoDiacritics = removeVietnameseDiacritics(this.searchText);
+        }
+        
+        @Override
+        public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
+            // Check all columns in the row
+            for (int i = 0; i < entry.getValueCount(); i++) {
+                String value = entry.getStringValue(i);
+                if (value != null) {
+                    String valueLower = value.toLowerCase();
+                    String valueNoDiacritics = removeVietnameseDiacritics(valueLower);
+                    
+                    // Match if either:
+                    // 1. Original text contains search term (for exact matches)
+                    // 2. Text without diacritics contains search term without diacritics
+                    if (valueLower.contains(searchText) || 
+                        valueNoDiacritics.contains(searchTextNoDiacritics)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 
@@ -405,7 +476,7 @@ public class BienTheSanPhamUI extends JFrame {
                         bts.increaseStock(quantity);
                         dao.update(bts);
                         loadTable();
-                        loadSelectedItem(table.getSelectedRow());
+                        updateStatistics();
                         JOptionPane.showMessageDialog(this,
                             String.format("Đã nhập %d sản phẩm vào kho thành công!", quantity),
                             "Nhập kho thành công",
@@ -445,7 +516,7 @@ public class BienTheSanPhamUI extends JFrame {
                         bts.decreaseStock(quantity);
                         dao.update(bts);
                         loadTable();
-                        loadSelectedItem(table.getSelectedRow());
+                        updateStatistics();
                         JOptionPane.showMessageDialog(this,
                             String.format("Đã xuất %d sản phẩm khỏi kho thành công!", quantity),
                             "Xuất kho thành công",
@@ -487,7 +558,7 @@ public class BienTheSanPhamUI extends JFrame {
         }
 
         if (count == 0) {
-            lowStockList.append("Không có s���n phẩm nào sắp hết hàng.");
+            lowStockList.append("Không có sản phẩm nào sắp hết hàng.");
         }
 
         JTextArea textArea = new JTextArea(lowStockList.toString());

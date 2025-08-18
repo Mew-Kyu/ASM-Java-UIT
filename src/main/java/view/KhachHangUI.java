@@ -46,9 +46,13 @@ public class KhachHangUI extends BaseAuthenticatedUI {
 
         JPanel panelButton = new JPanel();
         btnThem = new JButton("Thêm");
+        btnThem.setPreferredSize(new Dimension(80, 30));
         btnSua = new JButton("Sửa");
+        btnSua.setPreferredSize(new Dimension(80, 30));
         btnXoa = new JButton("Xóa");
+        btnXoa.setPreferredSize(new Dimension(80, 30));
         btnLamMoi = new JButton("Làm mới");
+        btnLamMoi.setPreferredSize(new Dimension(100, 30));
         panelButton.add(btnThem);
         panelButton.add(btnSua);
         panelButton.add(btnXoa);

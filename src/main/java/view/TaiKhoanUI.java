@@ -113,10 +113,15 @@ public class TaiKhoanUI extends JFrame {
         // Buttons panel
         JPanel buttonPanel = new JPanel(new FlowLayout());
         btnAdd = new JButton("Thêm");
+        btnAdd.setPreferredSize(new Dimension(80, 30));
         btnUpdate = new JButton("Cập nhật");
+        btnUpdate.setPreferredSize(new Dimension(100, 30));
         btnDelete = new JButton("Xóa");
+        btnDelete.setPreferredSize(new Dimension(80, 30));
         btnRefresh = new JButton("Làm mới");
+        btnRefresh.setPreferredSize(new Dimension(100, 30));
         btnClear = new JButton("Xóa form");
+        btnClear.setPreferredSize(new Dimension(100, 30));
 
         buttonPanel.add(btnAdd);
         buttonPanel.add(btnUpdate);
