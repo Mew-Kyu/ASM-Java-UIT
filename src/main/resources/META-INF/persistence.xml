@@ -31,6 +31,12 @@
             <property name="hibernate.hikari.poolName" value="MyPool"/>
             <property name="hibernate.hikari.autoCommit" value="false"/>
 
+            <!-- Connection and transaction settings -->
+            <property name="hibernate.connection.autocommit" value="false"/>
+            <property name="hibernate.jdbc.batch_size" value="20"/>
+            <property name="hibernate.order_inserts" value="true"/>
+            <property name="hibernate.order_updates" value="true"/>
+
             <!-- Debugging -->
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>

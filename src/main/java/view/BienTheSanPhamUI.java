@@ -17,7 +17,7 @@ import java.awt.event.*;
 import java.math.BigDecimal;
 import java.util.List;
 
-public class KhoHangUI extends JFrame {
+public class BienTheSanPhamUI extends JFrame {
     private JTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> rowSorter;
@@ -28,12 +28,12 @@ public class KhoHangUI extends JFrame {
     private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnStockIn, btnStockOut, btnLowStock;
     private JLabel lblTotalItems, lblTotalValue, lblLowStockAlert;
 
-    private BienTheSanPhamDAO dao = new BienTheSanPhamDAO();
-    private SanPhamDAO sanPhamDAO = new SanPhamDAO();
-    private MauSacDAO mauSacDAO = new MauSacDAO();
-    private KichThuocDAO kichThuocDAO = new KichThuocDAO();
+    private final BienTheSanPhamDAO dao = new BienTheSanPhamDAO();
+    private final SanPhamDAO sanPhamDAO = new SanPhamDAO();
+    private final MauSacDAO mauSacDAO = new MauSacDAO();
+    private final KichThuocDAO kichThuocDAO = new KichThuocDAO();
 
-    public KhoHangUI() {
+    public BienTheSanPhamUI() {
         setTitle("Quản Lý Kho Hàng - Inventory Management");
         setSize(1200, 700);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -557,7 +557,7 @@ public class KhoHangUI extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new KhoHangUI().setVisible(true));
+        SwingUtilities.invokeLater(() -> new BienTheSanPhamUI().setVisible(true));
     }
 }
 

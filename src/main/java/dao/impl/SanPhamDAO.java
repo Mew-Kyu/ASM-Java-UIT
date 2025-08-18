@@ -64,7 +64,11 @@ public class SanPhamDAO implements ISanPhamDAO {
     public SanPham findById(int maSP) {
         EntityManager em = emf.createEntityManager();
         try {
-            return em.find(SanPham.class, maSP);
+            TypedQuery<SanPham> query = em.createQuery(
+                "SELECT s FROM SanPham s LEFT JOIN FETCH s.maDM WHERE s.id = :id", SanPham.class);
+            query.setParameter("id", maSP);
+            List<SanPham> results = query.getResultList();
+            return results.isEmpty() ? null : results.get(0);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -77,7 +81,8 @@ public class SanPhamDAO implements ISanPhamDAO {
     public List<SanPham> findAll() {
         EntityManager em = emf.createEntityManager();
         try {
-            TypedQuery<SanPham> query = em.createQuery("SELECT s FROM SanPham s", SanPham.class);
+            TypedQuery<SanPham> query = em.createQuery(
+                "SELECT s FROM SanPham s LEFT JOIN FETCH s.maDM", SanPham.class);
             return query.getResultList();
         } catch (Exception e) {
             e.printStackTrace();
@@ -92,7 +97,7 @@ public class SanPhamDAO implements ISanPhamDAO {
         EntityManager em = emf.createEntityManager();
         try {
             TypedQuery<SanPham> query = em.createQuery(
-                "SELECT s FROM SanPham s WHERE s.tenSP LIKE :tenSP", SanPham.class);
+                "SELECT s FROM SanPham s LEFT JOIN FETCH s.maDM WHERE s.tenSP LIKE :tenSP", SanPham.class);
             query.setParameter("tenSP", "%" + tenSP + "%");
             return query.getResultList();
         } catch (Exception e) {

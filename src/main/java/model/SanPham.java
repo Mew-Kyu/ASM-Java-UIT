@@ -2,8 +2,6 @@ package model;
 
 import jakarta.persistence.*;
 
-import java.math.BigDecimal;
-
 @Entity
 @Table(name = "SanPham", schema = "dbo")
 public class SanPham {
@@ -14,12 +12,6 @@ public class SanPham {
 
     @Column(name = "TenSP", length = 100)
     private String tenSP;
-
-    @Column(name = "Gia", precision = 18, scale = 2)
-    private BigDecimal gia;
-
-    @Column(name = "SoLuong")
-    private Integer soLuong;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaDM")
@@ -44,21 +36,6 @@ public class SanPham {
         this.tenSP = tenSP;
     }
 
-    public BigDecimal getGia() {
-        return gia;
-    }
-
-    public void setGia(BigDecimal gia) {
-        this.gia = gia;
-    }
-
-    public Integer getSoLuong() {
-        return soLuong;
-    }
-
-    public void setSoLuong(Integer soLuong) {
-        this.soLuong = soLuong;
-    }
 
     // Add convenient methods with consistent naming for UI
     public DanhMuc getDanhMuc() {

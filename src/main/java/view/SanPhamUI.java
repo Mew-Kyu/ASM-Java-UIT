@@ -9,16 +9,16 @@ import util.RoleManager;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.math.BigDecimal;
+
 import java.util.List;
 
 public class SanPhamUI extends JFrame {
     private SanPhamController controller;
     private JTable table;
     private DefaultTableModel tableModel;
-    private JTextField txtId, txtTenSP, txtGia, txtSoLuong, txtMoTa;
+    private JTextField txtId, txtTenSP, txtMoTa, txtSearch;
     private JComboBox<DanhMuc> cmbDanhMuc;
-    private JButton btnAdd, btnUpdate, btnDelete, btnRefresh;
+    private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnSearch, btnClear;
 
     public SanPhamUI() {
         // Check authentication
@@ -37,7 +37,7 @@ public class SanPhamUI extends JFrame {
 
         controller = new SanPhamController();
         setTitle("Quản Lý Sản Phẩm - " + SessionManager.getInstance().getCurrentUsername() + " (" + SessionManager.getInstance().getCurrentUserRole() + ")");
-        setSize(800, 500);
+        setSize(1000, 700);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         initComponents();
@@ -47,51 +47,72 @@ public class SanPhamUI extends JFrame {
 
     private void initComponents() {
         JPanel panel = new JPanel(new BorderLayout());
-        tableModel = new DefaultTableModel(new Object[]{"Mã SP", "Tên SP", "Giá", "Số lượng", "Danh Mục", "Mô tả"}, 0) {
+
+        // Initialize buttons first
+        btnAdd = new JButton("Thêm");
+        btnUpdate = new JButton("Sửa");
+        btnDelete = new JButton("Xóa");
+        btnRefresh = new JButton("Làm mới");
+        btnSearch = new JButton("Tìm kiếm");
+        btnClear = new JButton("Xóa tìm kiếm");
+
+        // Create search panel
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.setBorder(BorderFactory.createTitledBorder("Tìm kiếm"));
+        searchPanel.add(new JLabel("Tìm theo tên:"));
+        txtSearch = new JTextField(20);
+        searchPanel.add(txtSearch);
+        searchPanel.add(btnSearch);
+        searchPanel.add(btnClear);
+
+        // Table setup
+        tableModel = new DefaultTableModel(new Object[]{"Mã SP", "Tên SP", "Danh Mục", "Mô tả"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false; // Make table non-editable
             }
         };
         table = new JTable(tableModel);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane scrollPane = new JScrollPane(table);
-        panel.add(scrollPane, BorderLayout.CENTER);
 
-        JPanel inputPanel = new JPanel(new GridLayout(3, 4));
+        // Input panel with better layout
+        JPanel inputPanel = new JPanel(new GridBagLayout());
         inputPanel.setBorder(BorderFactory.createTitledBorder("Thông tin sản phẩm"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.WEST;
 
-        inputPanel.add(new JLabel("Mã SP:"));
-        txtId = new JTextField();
+        // Row 1
+        gbc.gridx = 0; gbc.gridy = 0;
+        inputPanel.add(new JLabel("Mã SP:"), gbc);
+        gbc.gridx = 1;
+        txtId = new JTextField(15);
         txtId.setEnabled(false);
-        inputPanel.add(txtId);
+        inputPanel.add(txtId, gbc);
 
-        inputPanel.add(new JLabel("Tên SP:"));
-        txtTenSP = new JTextField();
-        inputPanel.add(txtTenSP);
+        gbc.gridx = 2;
+        inputPanel.add(new JLabel("Tên SP:"), gbc);
+        gbc.gridx = 3;
+        txtTenSP = new JTextField(15);
+        inputPanel.add(txtTenSP, gbc);
 
-        inputPanel.add(new JLabel("Giá:"));
-        txtGia = new JTextField();
-        inputPanel.add(txtGia);
-
-        inputPanel.add(new JLabel("Số lượng:"));
-        txtSoLuong = new JTextField();
-        inputPanel.add(txtSoLuong);
-
-        inputPanel.add(new JLabel("Danh Mục:"));
+        // Row 2
+        gbc.gridx = 0; gbc.gridy = 1;
+        inputPanel.add(new JLabel("Danh Mục:"), gbc);
+        gbc.gridx = 1;
         cmbDanhMuc = new JComboBox<>();
-        inputPanel.add(cmbDanhMuc);
+        cmbDanhMuc.setPreferredSize(new Dimension(150, 25));
+        inputPanel.add(cmbDanhMuc, gbc);
 
-        inputPanel.add(new JLabel("Mô tả:"));
-        txtMoTa = new JTextField();
-        inputPanel.add(txtMoTa);
+        gbc.gridx = 2;
+        inputPanel.add(new JLabel("Mô tả:"), gbc);
+        gbc.gridx = 3;
+        txtMoTa = new JTextField(15);
+        inputPanel.add(txtMoTa, gbc);
 
-        panel.add(inputPanel, BorderLayout.NORTH);
-
-        JPanel buttonPanel = new JPanel();
-        btnAdd = new JButton("Thêm");
-        btnUpdate = new JButton("Sửa");
-        btnDelete = new JButton("Xóa");
-        btnRefresh = new JButton("Làm mới");
+        // Button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout());
 
         // Enable/disable buttons based on user role
         boolean canModify = RoleManager.canModifyProducts();
@@ -110,6 +131,14 @@ public class SanPhamUI extends JFrame {
         buttonPanel.add(btnUpdate);
         buttonPanel.add(btnDelete);
         buttonPanel.add(btnRefresh);
+
+        // Layout assembly
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(searchPanel, BorderLayout.NORTH);
+        topPanel.add(inputPanel, BorderLayout.CENTER);
+
+        panel.add(topPanel, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         add(panel);
@@ -146,12 +175,25 @@ public class SanPhamUI extends JFrame {
         btnRefresh.addActionListener(e -> {
             loadTable();
             clearInput();
+            txtSearch.setText("");
         });
 
+        btnSearch.addActionListener(e -> searchSanPham());
+
+        btnClear.addActionListener(e -> {
+            txtSearch.setText("");
+            loadTable();
+        });
+
+        // Add Enter key support for search
+        txtSearch.addActionListener(e -> searchSanPham());
+
         table.getSelectionModel().addListSelectionListener(e -> {
-            int row = table.getSelectedRow();
-            if (row >= 0) {
-                fillInputFromTable(row);
+            if (!e.getValueIsAdjusting()) {
+                int row = table.getSelectedRow();
+                if (row >= 0) {
+                    fillInputFromTable(row);
+                }
             }
         });
     }
@@ -217,25 +259,13 @@ public class SanPhamUI extends JFrame {
     private boolean validateInput() {
         if (txtTenSP.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Tên sản phẩm không được để trống!");
-            return false;
-        }
-
-        try {
-            BigDecimal.valueOf(Double.parseDouble(txtGia.getText().trim()));
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Giá phải l�� số!");
-            return false;
-        }
-
-        try {
-            Integer.parseInt(txtSoLuong.getText().trim());
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Số lượng phải là số nguyên!");
+            txtTenSP.requestFocus();
             return false;
         }
 
         if (cmbDanhMuc.getSelectedItem() == null) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn danh mục!");
+            cmbDanhMuc.requestFocus();
             return false;
         }
 
@@ -245,8 +275,6 @@ public class SanPhamUI extends JFrame {
     private SanPham createSanPhamFromInput() {
         SanPham sp = new SanPham();
         sp.setTenSP(txtTenSP.getText().trim());
-        sp.setGia(BigDecimal.valueOf(Double.parseDouble(txtGia.getText().trim())));
-        sp.setSoLuong(Integer.parseInt(txtSoLuong.getText().trim()));
         sp.setDanhMuc((DanhMuc) cmbDanhMuc.getSelectedItem());
         sp.setMoTa(txtMoTa.getText().trim());
         return sp;
@@ -255,12 +283,10 @@ public class SanPhamUI extends JFrame {
     private void fillInputFromTable(int row) {
         txtId.setText(tableModel.getValueAt(row, 0).toString());
         txtTenSP.setText(tableModel.getValueAt(row, 1).toString());
-        txtGia.setText(tableModel.getValueAt(row, 2).toString());
-        txtSoLuong.setText(tableModel.getValueAt(row, 3).toString());
-        txtMoTa.setText(tableModel.getValueAt(row, 5).toString());
+        txtMoTa.setText(tableModel.getValueAt(row, 3).toString());
 
         // Select the correct category - improved logic
-        String danhMucName = tableModel.getValueAt(row, 4).toString();
+        String danhMucName = tableModel.getValueAt(row, 2).toString();
         if (danhMucName != null && !danhMucName.equals("N/A")) {
             for (int i = 0; i < cmbDanhMuc.getItemCount(); i++) {
                 DanhMuc dm = cmbDanhMuc.getItemAt(i);
@@ -277,8 +303,6 @@ public class SanPhamUI extends JFrame {
     private void clearInput() {
         txtId.setText("");
         txtTenSP.setText("");
-        txtGia.setText("");
-        txtSoLuong.setText("");
         txtMoTa.setText("");
         cmbDanhMuc.setSelectedIndex(-1);
         table.clearSelection();
@@ -306,14 +330,30 @@ public class SanPhamUI extends JFrame {
                 tableModel.addRow(new Object[]{
                         sp.getId(),
                         sp.getTenSP(),
-                        sp.getGia(),
-                        sp.getSoLuong(),
                         sp.getDanhMuc() != null ? sp.getDanhMuc().getTenDM() : "N/A",
                         sp.getMoTa()
                 });
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi tải dữ liệu: " + e.getMessage());
+        }
+    }
+
+    private void searchSanPham() {
+        String keyword = txtSearch.getText().trim();
+        tableModel.setRowCount(0);
+        try {
+            List<SanPham> list = controller.searchSanPham(keyword);
+            for (SanPham sp : list) {
+                tableModel.addRow(new Object[]{
+                        sp.getId(),
+                        sp.getTenSP(),
+                        sp.getDanhMuc() != null ? sp.getDanhMuc().getTenDM() : "N/A",
+                        sp.getMoTa()
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi tìm kiếm: " + e.getMessage());
         }
     }
 }
