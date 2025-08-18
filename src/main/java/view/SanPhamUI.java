@@ -207,15 +207,13 @@ public class SanPhamUI extends JFrame {
     private void addSanPham() {
         if (!validateInput()) return;
 
-        try {
-            SanPham sp = createSanPhamFromInput();
-            controller.addSanPham(sp);
-            JOptionPane.showMessageDialog(this, "Thêm sản phẩm thành công!");
+        SanPham sp = createSanPhamFromInput();
+        if (controller.addSanPham(sp, this)) {
+            // Success message is handled by controller
             loadTable();
             clearInput();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi khi thêm sản phẩm: " + e.getMessage());
         }
+        // Error messages are handled by controller
     }
 
     private void updateSanPham() {
@@ -226,16 +224,14 @@ public class SanPhamUI extends JFrame {
 
         if (!validateInput()) return;
 
-        try {
-            SanPham sp = createSanPhamFromInput();
-            sp.setId(Integer.parseInt(txtId.getText()));
-            controller.updateSanPham(sp);
-            JOptionPane.showMessageDialog(this, "Cập nhật sản phẩm thành công!");
+        SanPham sp = createSanPhamFromInput();
+        sp.setId(Integer.parseInt(txtId.getText()));
+        if (controller.updateSanPham(sp, this)) {
+            // Success message is handled by controller
             loadTable();
             clearInput();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi khi cập nhật sản phẩm: " + e.getMessage());
         }
+        // Error messages are handled by controller
     }
 
     private void deleteSanPham() {
@@ -244,21 +240,16 @@ public class SanPhamUI extends JFrame {
             return;
         }
 
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Bạn có chắc muốn xóa sản phẩm này?",
-                "Xác nhận xóa",
-                JOptionPane.YES_NO_OPTION);
-
-        if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                int id = Integer.parseInt(txtId.getText());
-                controller.deleteSanPham(id);
-                JOptionPane.showMessageDialog(this, "Xóa sản phẩm thành công!");
+        try {
+            int id = Integer.parseInt(txtId.getText());
+            if (controller.deleteSanPham(id, this)) {
+                // Success message and confirmation are handled by controller
                 loadTable();
                 clearInput();
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Lỗi khi xóa sản phẩm: " + e.getMessage());
             }
+            // Error messages are handled by controller
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "ID sản phẩm không hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 

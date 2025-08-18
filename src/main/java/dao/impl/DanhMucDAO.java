@@ -1,75 +1,44 @@
 package dao.impl;
 
-import jakarta.persistence.*;
+import dao.base.BaseDAO;
+import dao.interfaces.IDanhMucDAO;
 import model.DanhMuc;
-import java.util.List;
 
-public class DanhMucDAO {
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("QuanLyCuaHangPU");
-
-    public List<DanhMuc> findAll() {
-        EntityManager em = emf.createEntityManager();
-        try {
-            return em.createQuery("SELECT d FROM DanhMuc d", DanhMuc.class).getResultList();
-        } finally {
-            em.close();
-        }
+/**
+ * DanhMuc DAO implementation extending BaseDAO
+ */
+public class DanhMucDAO extends BaseDAO<DanhMuc, Integer> implements IDanhMucDAO {
+    
+    public DanhMucDAO() {
+        super(DanhMuc.class);
     }
 
+    @Override
     public void insert(DanhMuc dm) {
-        EntityManager em = emf.createEntityManager();
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            em.persist(dm);
-            tx.commit();
-        } catch (Exception e) {
-            if (tx.isActive()) tx.rollback();
-            throw e;
-        } finally {
-            em.close();
-        }
+        super.insert(dm);
     }
 
+    @Override
     public void update(DanhMuc dm) {
-        EntityManager em = emf.createEntityManager();
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            em.merge(dm);
-            tx.commit();
-        } catch (Exception e) {
-            if (tx.isActive()) tx.rollback();
-            throw e;
-        } finally {
-            em.close();
-        }
+        super.update(dm);
     }
 
-    public void delete(int id) {
-        EntityManager em = emf.createEntityManager();
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            DanhMuc dm = em.find(DanhMuc.class, id);
-            if (dm != null) {
-                em.remove(dm);
-            }
-            tx.commit();
-        } catch (Exception e) {
-            if (tx.isActive()) tx.rollback();
-            throw e;
-        } finally {
-            em.close();
-        }
+    @Override
+    public void delete(int maDM) {
+        super.delete(maDM);
     }
 
-    public DanhMuc findById(int id) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            return em.find(DanhMuc.class, id);
-        } finally {
-            em.close();
+    @Override
+    public DanhMuc findById(int maDM) {
+        return super.findById(maDM).orElse(null);
+    }
+    
+    @Override
+    protected void validateEntity(DanhMuc entity) {
+        super.validateEntity(entity);
+        
+        if (entity.getTenDM() == null || entity.getTenDM().trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên danh mục không được để trống");
         }
     }
 }
