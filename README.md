@@ -489,15 +489,177 @@ Login Screen → Role Verification → Main Dashboard → Feature Access
 - **Password Security**: BCrypt hashing with salt
 - **Brute Force Protection**: Account lockout mechanisms
 
-### **👥 Authorization System**
-- **Role-Based Access Control (RBAC)**
-- **Granular Permissions**: Feature-level access control
-- **UI Security**: Dynamic button enabling/disabling
-- **API Security**: Service-level permission checks
+### **👥 Authorization System & Role Management**
+
+The application implements a comprehensive **Role-Based Access Control (RBAC)** system with three distinct user roles and granular permission management.
+
+#### **🏗️ Authorization Architecture**
+
+```java
+SessionManager (Singleton)
+    ↓
+RoleManager (Static Permission Checker)
+    ↓
+UI Components (Dynamic Role-Based Rendering)
+    ↓
+Controller Layer (Double Permission Check)
+```
+
+#### **👤 User Roles & Hierarchy**
+
+| Role | Level | Description |
+|------|-------|-------------|
+| **🔴 ADMIN** | 1 | System administrator with full access |
+| **🟡 MANAGER** | 2 | Store manager with operational control |
+| **🟢 STAFF** | 3 | Sales staff with limited access |
+
+#### **📊 Detailed Permission Matrix**
+
+| **Chức Năng** | **ADMIN** | **MANAGER** | **STAFF** |
+|---------------|-----------|-------------|-----------|
+| **👥 Quản lý tài khoản** | ✅ **Full Access** | ❌ **No Access** | ❌ **No Access** |
+| **👔 Quản lý nhân viên** | ✅ **Full Access** | ❌ **No Access** | ❌ **No Access** |
+| **📦 Quản lý danh mục** | ✅ **Create/Edit/Delete** | ✅ **Create/Edit/Delete** | ❌ **No Access** |
+| **🎨 Quản lý màu sắc** | ✅ **Create/Edit/Delete** | ✅ **Create/Edit/Delete** | ❌ **No Access** |
+| **📏 Quản lý kích thước** | ✅ **Create/Edit/Delete** | ✅ **Create/Edit/Delete** | ❌ **No Access** |
+| **🏪 Quản lý sản phẩm** | ✅ **Full CRUD** | ✅ **Full CRUD** | 👁️ **View Only** |
+| **👥 Quản lý khách hàng** | ✅ **Full CRUD** | ✅ **Full CRUD** | ✅ **Create/View** |
+| **🧾 Quản lý hóa đơn** | ✅ **Full Access** | ✅ **Full Access** | ✅ **Create/View Own** |
+| **📦 Quản lý biến thể** | ✅ **Full CRUD** | ✅ **Full CRUD** | ✅ **View/Basic Edit** |
+| **📊 Xem báo cáo** | ✅ **All Reports** | ✅ **All Reports** | ❌ **No Access** |
+
+#### **🔧 Implementation Details**
+
+##### **1. Session Management**
+```java
+public class SessionManager {
+    private static SessionManager instance;
+    private TaiKhoan currentUser;
+    private boolean isLoggedIn = false;
+    
+    public String getCurrentUserRole() {
+        return currentUser != null ? currentUser.getQuyen() : null;
+    }
+}
+```
+
+##### **2. Role Manager**
+```java
+public class RoleManager {
+    // Role constants
+    public static final String ADMIN = "ADMIN";
+    public static final String MANAGER = "MANAGER";
+    public static final String STAFF = "STAFF";
+    
+    // Permission methods
+    public static boolean canAccessAccountManagement() {
+        return isAdmin();
+    }
+    
+    public static boolean canAccessProductConfiguration() {
+        return isManagerOrHigher();
+    }
+}
+```
+
+##### **3. UI Security Implementation**
+```java
+// Dynamic menu generation based on role
+if (RoleManager.canAccessAccountManagement()) {
+    JButton btnTaiKhoan = createMenuButton("Quản Lý Tài Khoản");
+    menuPanel.add(btnTaiKhoan);
+}
+
+// Double-check on action
+private void openTaiKhoanUI() {
+    if (!RoleManager.canAccessAccountManagement()) {
+        RoleManager.showAccessDeniedMessage(this, "Admin");
+        return;
+    }
+    new TaiKhoanUI().setVisible(true);
+}
+```
+
+#### **🛡️ Security Layers**
+
+##### **Layer 1: Authentication Check**
+```java
+if (!SessionManager.getInstance().isLoggedIn()) {
+    JOptionPane.showMessageDialog(null, "Vui lòng đăng nhập trước!");
+    new LoginUI().setVisible(true);
+    return;
+}
+```
+
+##### **Layer 2: Authorization Check**
+```java
+if (!RoleManager.canAccessFeature()) {
+    RoleManager.showAccessDeniedMessage(this, "Required Role");
+    this.dispose();
+    return;
+}
+```
+
+##### **Layer 3: UI Rendering**
+- Buttons only appear if user has permission
+- Dynamic menu generation based on role
+- Real-time permission validation
+
+##### **Layer 4: Controller Validation**
+- All controller actions verify permissions
+- Service layer enforces business rules
+- Database operations require authenticated session
+
+#### **🔐 Password Security**
+
+```java
+public class PasswordUtils {
+    // BCrypt with salt for secure hashing
+    public static String hashPassword(String plainPassword) {
+        return BCrypt.hashpw(plainPassword, BCrypt.gensalt());
+    }
+    
+    public static boolean checkPassword(String plainPassword, String hashedPassword) {
+        return BCrypt.checkpw(plainPassword, hashedPassword);
+    }
+}
+```
+
+#### **🚨 Access Control Flow**
+
+```mermaid
+graph TD
+    A[User Login] --> B{Authentication Check}
+    B -->|Success| C[SessionManager Stores User]
+    B -->|Fail| D[Access Denied]
+    
+    C --> E{Role Verification}
+    E --> F[ADMIN - Full Access]
+    E --> G[MANAGER - Limited Access]
+    E --> H[STAFF - Basic Access]
+    
+    F --> I[All Features Available]
+    G --> J[Management Features Only]
+    H --> K[Basic Operations Only]
+```
+
+#### **⚙️ Configuration**
+
+The role system is configured through the database `TaiKhoan` table:
+```sql
+TaiKhoan (
+    TenDangNhap VARCHAR(50) PRIMARY KEY,
+    MatKhau VARCHAR(100),        -- BCrypt hashed
+    MaNV INT,                    -- Employee reference
+    Quyen VARCHAR(20)            -- 'ADMIN', 'MANAGER', 'STAFF'
+)
+```
 
 ### **🛡️ Security Best Practices**
 - **Input Validation**: Comprehensive validation at all layers
 - **SQL Injection Prevention**: Parameterized queries
 - **XSS Prevention**: Input sanitization
 - **Error Handling**: No sensitive information in error messages
+- **Session Security**: Automatic logout and session timeout
+- **Multi-layer Authorization**: UI, Controller, and Service level checks
 
