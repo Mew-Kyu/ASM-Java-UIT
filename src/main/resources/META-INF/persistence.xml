@@ -4,6 +4,7 @@
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd">
     <persistence-unit name="QuanLyCuaHangPU" transaction-type="RESOURCE_LOCAL">
+        <!-- Original entities -->
         <class>model.BienTheSanPham</class>
         <class>model.ChiTietHoaDon</class>
         <class>model.DanhMuc</class>
@@ -14,6 +15,20 @@
         <class>model.MauSac</class>
         <class>model.KichThuoc</class>
         <class>model.TaiKhoan</class>
+        
+        <!-- New feature entities -->
+        <class>model.BaoCao</class>
+        <class>model.ThongKeDoanhThu</class>
+        <class>model.ThongKeSanPham</class>
+        <class>model.NhaCungCap</class>
+        <class>model.DonDatHang</class>
+        <class>model.ChiTietDatHang</class>
+        <class>model.ChuongTrinhKhuyenMai</class>
+        <class>model.HinhThucThanhToan</class>
+        <class>model.PhieuDoiTra</class>
+        <class>model.ChiTietPhieuDoiTra</class>
+        <class>model.TheThanThiet</class>
+        <class>model.LichSuDiem</class>
         <!-- Config JDBC -->
         <properties>
             <!-- JPA -->

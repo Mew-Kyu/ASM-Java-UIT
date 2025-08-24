@@ -121,6 +121,37 @@ public class MainMenuUI extends JFrame {
             menuPanel.add(btnHoaDon);
         }
 
+        // NEW FEATURES - Manager and Admin access
+        if (RoleManager.canAccessReports()) {
+            JButton btnBaoCao = createMenuButton("Báo Cáo & Thống Kê", "icons/report.png");
+            btnBaoCao.addActionListener(e -> openBaoCaoUI());
+            menuPanel.add(btnBaoCao);
+        }
+
+        if (RoleManager.canAccessSupplierManagement()) {
+            JButton btnNhaCungCap = createMenuButton("Quản Lý Nhà Cung Cấp", "icons/supplier.png");
+            btnNhaCungCap.addActionListener(e -> openNhaCungCapUI());
+            menuPanel.add(btnNhaCungCap);
+        }
+
+        if (RoleManager.canAccessPaymentMethods()) {
+            JButton btnHinhThucThanhToan = createMenuButton("Hình Thức Thanh Toán", "icons/payment.png");
+            btnHinhThucThanhToan.addActionListener(e -> openHinhThucThanhToanUI());
+            menuPanel.add(btnHinhThucThanhToan);
+        }
+
+        if (RoleManager.canAccessLoyalty()) {
+            JButton btnKhachHangThanThiet = createMenuButton("Khách Hàng Thân Thiết", "icons/loyalty.png");
+            btnKhachHangThanThiet.addActionListener(e -> openKhachHangThanThietUI());
+            menuPanel.add(btnKhachHangThanThiet);
+        }
+
+        if (RoleManager.canAccessReturns()) {
+            JButton btnDoiTra = createMenuButton("Đổi Trả Hàng", "icons/return.png");
+            btnDoiTra.addActionListener(e -> openDoiTraUI());
+            menuPanel.add(btnDoiTra);
+        }
+
         mainPanel.add(menuPanel, BorderLayout.CENTER);
         add(mainPanel);
     }
@@ -216,6 +247,47 @@ public class MainMenuUI extends JFrame {
             return;
         }
         new BienTheSanPhamUI().setVisible(true);
+    }
+
+    // NEW FEATURE UI METHODS
+    private void openBaoCaoUI() {
+        if (!RoleManager.canAccessReports()) {
+            RoleManager.showAccessDeniedMessage(this, "Báo cáo & Thống kê", "Manager hoặc Admin");
+            return;
+        }
+        new BaoCaoUI().setVisible(true);
+    }
+
+    private void openNhaCungCapUI() {
+        if (!RoleManager.canAccessSupplierManagement()) {
+            RoleManager.showAccessDeniedMessage(this, "Quản lý nhà cung cấp", "Manager hoặc Admin");
+            return;
+        }
+        new NhaCungCapUI().setVisible(true);
+    }
+
+    private void openHinhThucThanhToanUI() {
+        if (!RoleManager.canAccessPaymentMethods()) {
+            RoleManager.showAccessDeniedMessage(this, "Quản lý hình thức thanh toán", "Manager hoặc Admin");
+            return;
+        }
+        new HinhThucThanhToanUI().setVisible(true);
+    }
+
+    private void openKhachHangThanThietUI() {
+        if (!RoleManager.canAccessLoyalty()) {
+            RoleManager.showAccessDeniedMessage(this, "Quản lý khách hàng thân thiết", "Staff trở lên");
+            return;
+        }
+        new TheThanThietUI().setVisible(true);
+    }
+
+    private void openDoiTraUI() {
+        if (!RoleManager.canAccessReturns()) {
+            RoleManager.showAccessDeniedMessage(this, "Quản lý đổi trả hàng", "Staff trở lên");
+            return;
+        }
+        new PhieuDoiTraUI().setVisible(true);
     }
 
     private void logout() {

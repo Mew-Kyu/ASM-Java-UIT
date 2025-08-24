@@ -41,6 +41,14 @@ public class EntityManagerUtil {
     }
     
     /**
+     * Get a new EntityManager instance
+     * Note: Caller is responsible for closing the EntityManager
+     */
+    public static EntityManager getEntityManager() {
+        return getEntityManagerFactory().createEntityManager();
+    }
+    
+    /**
      * Execute operation within transaction (for write operations)
      */
     public static void executeInTransaction(Consumer<EntityManager> operation) {
