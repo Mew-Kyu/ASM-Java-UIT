@@ -243,7 +243,8 @@ public class BienTheSanPhamUI extends JFrame {
 
     private void loadTable() {
         tableModel.setRowCount(0);
-        List<BienTheSanPham> list = dao.findAll();
+        // Use eager fetch to avoid LazyInitializationException when accessing associations in UI thread
+        List<BienTheSanPham> list = dao.findAllWithDetails();
         for (BienTheSanPham bts : list) {
             String sanPhamName = bts.getMaSP() != null ? bts.getMaSP().getTenSP() : "N/A";
             String mauSacName = bts.getMaMau() != null ? bts.getMaMau().getTenMau() : "N/A";
@@ -364,7 +365,8 @@ public class BienTheSanPhamUI extends JFrame {
     }
 
     private void updateStatistics() {
-        List<BienTheSanPham> allItems = dao.findAll();
+        // Use eager fetch for statistics as well
+        List<BienTheSanPham> allItems = dao.findAllWithDetails();
         int totalItems = allItems.size();
         BigDecimal totalValue = BigDecimal.ZERO;
         int lowStockCount = 0;
@@ -500,7 +502,8 @@ public class BienTheSanPhamUI extends JFrame {
         }
 
         int id = Integer.parseInt(txtId.getText());
-        BienTheSanPham bts = dao.findById(id);
+        // Ensure associations are initialized for form binding
+        BienTheSanPham bts = dao.findByIdWithDetails(id);
         if (bts == null) return;
 
         String input = JOptionPane.showInputDialog(this,

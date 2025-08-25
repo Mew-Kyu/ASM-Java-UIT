@@ -312,28 +312,53 @@ public class PhieuDoiTraFormUI extends JDialog {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập mã hóa đơn", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
-        
+
         try {
-            int maHD = Integer.parseInt(maHDText);
-            
-            // Kiểm tra hóa đơn có thể đổi trả không
-            if (!phieuDoiTraService.kiemTraHoaDonCoTheDoisTra(maHD)) {
-                JOptionPane.showMessageDialog(this, "Hóa đơn này không thể đổi trả (có thể đã quá thời hạn hoặc không tồn tại)", 
-                    "Thông báo", JOptionPane.WARNING_MESSAGE);
+            // Validate input is numeric
+            int maHD;
+            try {
+                maHD = Integer.parseInt(maHDText);
+                if (maHD <= 0) {
+                    JOptionPane.showMessageDialog(this, "Mã hóa đơn phải là số dương",
+                                                "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Mã hóa đơn phải là số hợp lệ",
+                                            "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
-            // Load thông tin hóa đơn
-            HoaDon hoaDon = hoaDonDAO.findById(maHD);
-            if (hoaDon != null) {
-                hienThiThongTinHoaDon(hoaDon);
-                loadSanPhamHoaDon(maHD);
+
+            // First check if invoice exists
+            HoaDon hoaDon = hoaDonDAO.findByIdWithDetails(maHD);
+            if (hoaDon == null) {
+                JOptionPane.showMessageDialog(this,
+                    "Hóa đơn với mã " + maHD + " không tồn tại trong hệ thống",
+                    "Không tìm thấy hóa đơn", JOptionPane.WARNING_MESSAGE);
+                return;
             }
-            
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Mã hóa đơn phải là số", "Lỗi", JOptionPane.ERROR_MESSAGE);
+
+            // Then check if invoice can be returned/exchanged
+            if (!phieuDoiTraService.kiemTraHoaDonCoTheDoisTra(maHD)) {
+                JOptionPane.showMessageDialog(this,
+                    "Hóa đơn này không thể đổi trả (có thể đã quá thời hạn hoặc không có sản phẩm)",
+                    "Không thể đổi trả", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Display invoice information and load products
+            hienThiThongTinHoaDon(hoaDon);
+            loadSanPhamHoaDon(maHD);
+
+            JOptionPane.showMessageDialog(this,
+                "Tìm thấy hóa đơn hợp lệ và có thể đổi trả!",
+                "Thành công", JOptionPane.INFORMATION_MESSAGE);
+
         } catch (BusinessException ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Lỗi nghiệp vụ: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            ex.printStackTrace(); // For debugging
+            JOptionPane.showMessageDialog(this, "Lỗi không xác định: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
     
@@ -350,7 +375,7 @@ public class PhieuDoiTraFormUI extends JDialog {
     
     private void loadSanPhamHoaDon(int maHD) {
         try {
-            HoaDon hoaDonInfo = hoaDonDAO.findById(maHD);
+            HoaDon hoaDonInfo = hoaDonDAO.findByIdWithDetails(maHD);
             if (hoaDonInfo != null) {
                 List<ChiTietHoaDon> chiTietList = new ArrayList<>(hoaDonInfo.getChiTietHoaDons());
                 modelHoaDon.setRowCount(0);
@@ -508,7 +533,7 @@ public class PhieuDoiTraFormUI extends JDialog {
             
             for (ChiTietPhieuDoiTra chiTiet : chiTietList) {
                 // Get product info
-                BienTheSanPham bienThe = bienTheSanPhamDAO.findById(chiTiet.getMaBienThe());
+                BienTheSanPham bienThe = bienTheSanPhamDAO.findByIdWithDetails(chiTiet.getMaBienThe());
                 if (bienThe != null) {
                     String tenSanPham = bienThe.getMaSP() != null ? bienThe.getMaSP().getTenSP() : "N/A";
                     String tenMauSac = bienThe.getMaMau() != null ? bienThe.getMaMau().getTenMau() : "N/A";

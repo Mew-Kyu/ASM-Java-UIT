@@ -8,5 +8,6 @@ public interface IHoaDonDAO {
     void update(HoaDon hd);
     void delete(int maHD);
     HoaDon findById(int maHD);
+    HoaDon findByIdWithDetails(int maHD);
     List<HoaDon> findAll();
 }

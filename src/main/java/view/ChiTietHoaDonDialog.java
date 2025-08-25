@@ -8,9 +8,6 @@ import model.HoaDon;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -22,12 +19,14 @@ public class ChiTietHoaDonDialog extends JDialog {
     private DefaultTableModel tableModel;
     private JLabel lblHoaDonInfo;
     private JButton btnClose, btnDelete, btnRefresh;
+    private JFrame parentFrame;
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public ChiTietHoaDonDialog(JFrame parent, HoaDon hoaDon) {
         super(parent, "Chi Tiết Hóa Đơn #" + hoaDon.getId(), true);
         this.hoaDon = hoaDon;
+        this.parentFrame = parent;
         this.controller = new ChiTietHoaDonController();
         this.hoaDonController = new HoaDonController();
 
@@ -190,29 +189,58 @@ public class ChiTietHoaDonDialog extends JDialog {
             return;
         }
 
+        // Check if there are any items to delete
+        if (tableModel.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Không có sản phẩm nào để xóa!");
+            return;
+        }
+
         try {
             List<ChiTietHoaDon> details = controller.getByHoaDonId(hoaDon.getId());
             if (selectedRow < details.size()) {
                 ChiTietHoaDon selectedDetail = details.get(selectedRow);
 
+                // Show product info in confirmation dialog
+                String productInfo = String.format(
+                    "Sản phẩm: %s\nMàu sắc: %s\nSize: %s\nSố lượng: %d\nĐơn giá: %,.0f VNĐ",
+                    selectedDetail.getMaBienThe().getMaSP().getTenSP(),
+                    selectedDetail.getMaBienThe().getMaMau().getTenMau(),
+                    selectedDetail.getMaBienThe().getMaSize().getTenSize(),
+                    selectedDetail.getSoLuong(),
+                    selectedDetail.getDonGia()
+                );
+
                 int confirm = JOptionPane.showConfirmDialog(this,
-                    "Bạn có chắc muốn xóa sản phẩm này khỏi hóa đơn?",
+                    productInfo + "\n\nBạn có chắc muốn xóa sản phẩm này khỏi hóa đơn?",
                     "Xác nhận xóa",
-                    JOptionPane.YES_NO_OPTION);
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
 
                 if (confirm == JOptionPane.YES_OPTION) {
+                    // Delete from database first
                     controller.delete(selectedDetail.getId());
-                    
+
+                    // Remove from the entity's collection to keep it in sync
+                    hoaDon.getChiTietHoaDons().removeIf(ct ->
+                        ct.getId().equals(selectedDetail.getId()));
+
                     // Recalculate and update invoice total
                     hoaDon.calculateTongTien();
                     hoaDonController.updateHoaDon(hoaDon);
-                    
+
+                    // Refresh the invoice object from database to ensure consistency
+                    hoaDon = hoaDonController.getHoaDonByIdWithDetails(hoaDon.getId());
+
                     JOptionPane.showMessageDialog(this, "Đã xóa sản phẩm khỏi hóa đơn!");
                     loadData();
+                    refreshParentWindow();
                 }
+            } else {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy sản phẩm được chọn!");
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi xóa: " + e.getMessage());
+            e.printStackTrace(); // For debugging
         }
     }
 
@@ -236,13 +264,23 @@ public class ChiTietHoaDonDialog extends JDialog {
                     if (newQuantity > 0) {
                         selectedDetail.setSoLuong(newQuantity);
                         controller.update(selectedDetail);
-                        
+
+                        // Update the entity's collection to keep it in sync
+                        hoaDon.getChiTietHoaDons().stream()
+                            .filter(ct -> ct.getId().equals(selectedDetail.getId()))
+                            .findFirst()
+                            .ifPresent(ct -> ct.setSoLuong(newQuantity));
+
                         // Recalculate and update invoice total
                         hoaDon.calculateTongTien();
                         hoaDonController.updateHoaDon(hoaDon);
-                        
+
+                        // Refresh the invoice object from database to ensure consistency
+                        hoaDon = hoaDonController.getHoaDonByIdWithDetails(hoaDon.getId());
+
                         JOptionPane.showMessageDialog(this, "Đã cập nhật số lượng!");
                         loadData();
+                        refreshParentWindow();
                     } else {
                         JOptionPane.showMessageDialog(this, "Số lượng phải lớn hơn 0!");
                     }
@@ -252,6 +290,23 @@ public class ChiTietHoaDonDialog extends JDialog {
             JOptionPane.showMessageDialog(this, "Số lượng không hợp lệ!");
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi cập nhật: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Refresh parent window if it's HoaDonUI to update the invoice list
+     */
+    private void refreshParentWindow() {
+        if (parentFrame instanceof view.HoaDonUI) {
+            // Call refresh method on parent if available
+            try {
+                java.lang.reflect.Method refreshMethod = parentFrame.getClass().getDeclaredMethod("loadHoaDonTable");
+                refreshMethod.setAccessible(true);
+                refreshMethod.invoke(parentFrame);
+            } catch (Exception e) {
+                // Silently ignore if refresh method is not available
+                System.out.println("Could not refresh parent window: " + e.getMessage());
+            }
         }
     }
 }

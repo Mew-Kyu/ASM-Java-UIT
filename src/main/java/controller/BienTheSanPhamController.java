@@ -33,8 +33,16 @@ public class BienTheSanPhamController {
         return dao.findAll();
     }
 
+    public List<BienTheSanPham> getAllWithDetails() {
+        return dao.findAllWithDetails();
+    }
+
     public BienTheSanPham getById(int id) {
         return dao.findById(id);
+    }
+
+    public BienTheSanPham getByIdWithDetails(int id) {
+        return dao.findByIdWithDetails(id);
     }
 
     public void update(BienTheSanPham bts) {

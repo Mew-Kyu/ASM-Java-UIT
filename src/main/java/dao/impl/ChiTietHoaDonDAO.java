@@ -64,20 +64,39 @@ public class ChiTietHoaDonDAO implements IChiTietHoaDonDAO {
     @Override
     public ChiTietHoaDon findById(ChiTietHoaDonId id) {
         EntityManager em = emf.createEntityManager();
-        return em.find(ChiTietHoaDon.class, id);
+        try {
+            return em.find(ChiTietHoaDon.class, id);
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public List<ChiTietHoaDon> findAll() {
         EntityManager em = emf.createEntityManager();
-        return em.createQuery("SELECT ct FROM ChiTietHoaDon ct", ChiTietHoaDon.class).getResultList();
+        try {
+            return em.createQuery("SELECT ct FROM ChiTietHoaDon ct", ChiTietHoaDon.class).getResultList();
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public List<ChiTietHoaDon> findByHoaDonId(int maHD) {
         EntityManager em = emf.createEntityManager();
-        return em.createQuery("SELECT ct FROM ChiTietHoaDon ct WHERE ct.id.maHD = :maHD", ChiTietHoaDon.class)
-                .setParameter("maHD", maHD)
-                .getResultList();
+        try {
+            return em.createQuery(
+                    "SELECT ct FROM ChiTietHoaDon ct " +
+                    "LEFT JOIN FETCH ct.maBienThe mbt " +
+                    "LEFT JOIN FETCH mbt.maSP " +
+                    "LEFT JOIN FETCH mbt.maMau " +
+                    "LEFT JOIN FETCH mbt.maSize " +
+                    "WHERE ct.id.maHD = :maHD",
+                    ChiTietHoaDon.class)
+                    .setParameter("maHD", maHD)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
     }
 }

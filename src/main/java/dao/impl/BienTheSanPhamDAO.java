@@ -63,20 +63,71 @@ public class BienTheSanPhamDAO implements IBienTheSanPhamDAO {
     @Override
     public BienTheSanPham findById(int maBienThe) {
         EntityManager em = emf.createEntityManager();
-        return em.find(BienTheSanPham.class, maBienThe);
+        try {
+            return em.find(BienTheSanPham.class, maBienThe);
+        } finally {
+            em.close();
+        }
+    }
+
+    @Override
+    public BienTheSanPham findByIdWithDetails(int maBienThe) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            return em.createQuery(
+                "SELECT bt FROM BienTheSanPham bt " +
+                "LEFT JOIN FETCH bt.maSP " +
+                "LEFT JOIN FETCH bt.maSize " +
+                "LEFT JOIN FETCH bt.maMau " +
+                "WHERE bt.id = :maBienThe", 
+                BienTheSanPham.class)
+                .setParameter("maBienThe", maBienThe)
+                .getResultStream()
+                .findFirst()
+                .orElse(null);
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public List<BienTheSanPham> findAll() {
         EntityManager em = emf.createEntityManager();
-        return em.createQuery("SELECT b FROM BienTheSanPham b", BienTheSanPham.class).getResultList();
+        try {
+            return em.createQuery("SELECT b FROM BienTheSanPham b", BienTheSanPham.class).getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Returns all inventory variants with associated product, size and color initialized
+     * to avoid LazyInitializationException in the Swing UI layer.
+     */
+    public List<BienTheSanPham> findAllWithDetails() {
+        EntityManager em = emf.createEntityManager();
+        try {
+            return em.createQuery(
+                "SELECT bt FROM BienTheSanPham bt " +
+                "LEFT JOIN FETCH bt.maSP " +
+                "LEFT JOIN FETCH bt.maSize " +
+                "LEFT JOIN FETCH bt.maMau",
+                BienTheSanPham.class
+            ).getResultList();
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public List<BienTheSanPham> findBySanPhamId(int maSP) {
         EntityManager em = emf.createEntityManager();
-        return em.createQuery("SELECT b FROM BienTheSanPham b WHERE b.maSP = :maSP", BienTheSanPham.class)
-                .setParameter("maSP", maSP)
-                .getResultList();
+        try {
+            return em.createQuery("SELECT b FROM BienTheSanPham b WHERE b.maSP = :maSP", BienTheSanPham.class)
+                    .setParameter("maSP", maSP)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
     }
 }

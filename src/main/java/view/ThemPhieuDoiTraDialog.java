@@ -281,46 +281,85 @@ public class ThemPhieuDoiTraDialog extends JDialog {
         try {
             String maHDText = txtMaHD.getText().trim();
             if (maHDText.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Vui lòng nhập mã hóa đơn", 
+                JOptionPane.showMessageDialog(this, "Vui lòng nhập mã hóa đơn",
                                             "Thông báo", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            
-            int maHD = Integer.parseInt(maHDText);
-            HoaDon hoaDon = hoaDonDAO.findById(maHD);
-            
+
+            // Validate input is numeric
+            int maHD;
+            try {
+                maHD = Integer.parseInt(maHDText);
+                if (maHD <= 0) {
+                    JOptionPane.showMessageDialog(this, "Mã hóa đơn phải là số dương",
+                                                "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Mã hóa đơn phải là số hợp lệ",
+                                            "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Clear previous data
+            clearCustomerInfo();
+
+            // Find invoice
+            HoaDon hoaDon = hoaDonDAO.findByIdWithDetails(maHD);
+
             if (hoaDon == null) {
-                JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn", 
-                                            "Thông báo", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                    "Hóa đơn với mã " + maHD + " không tồn tại trong hệ thống",
+                    "Không tìm thấy hóa đơn", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            
-            // Kiểm tra có thể đổi trả không
-            if (!phieuDoiTraService.kiemTraHoaDonCoTheDoisTra(maHD)) {
-                JOptionPane.showMessageDialog(this, "Hóa đơn này không thể đổi trả", 
-                                            "Thông báo", JOptionPane.WARNING_MESSAGE);
+
+            // Check if invoice can be returned/exchanged
+            try {
+                if (!phieuDoiTraService.kiemTraHoaDonCoTheDoisTra(maHD)) {
+                    JOptionPane.showMessageDialog(this,
+                        "Hóa đơn này không thể đổi trả (có thể đã quá thời hạn hoặc không có sản phẩm)",
+                        "Không thể đổi trả", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                    "Lỗi khi kiểm tra điều kiện đổi trả: " + ex.getMessage(),
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
-            // Hiển thị thông tin khách hàng
-            if (hoaDon.getMaKH() != null) {
-                KhachHang khachHang = hoaDon.getMaKH();
-                txtMaKH.setText(String.valueOf(khachHang.getId()));
-                txtTenKH.setText(khachHang.getHoTen());
-            } else {
-                txtMaKH.setText("");
-                txtTenKH.setText("Khách lẻ");
-            }
-            
-            JOptionPane.showMessageDialog(this, "Tìm thấy hóa đơn hợp lệ", 
-                                        "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-            
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Mã hóa đơn phải là số", 
-                                        "Lỗi", JOptionPane.ERROR_MESSAGE);
+
+            // Display customer information
+            displayCustomerInfo(hoaDon);
+
+            JOptionPane.showMessageDialog(this,
+                String.format("Tìm thấy hóa đơn hợp lệ!\nMã hóa đơn: %d\nNgày lập: %s\nTổng tiền: %,.0f VNĐ",
+                    hoaDon.getId(),
+                    hoaDon.getNgayLap().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    hoaDon.getTotalAmount()),
+                "Thành công", JOptionPane.INFORMATION_MESSAGE);
+
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi khi tìm hóa đơn: " + ex.getMessage(), 
-                                        "Lỗi", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace(); // For debugging
+            JOptionPane.showMessageDialog(this,
+                "Lỗi không xác định khi tìm hóa đơn: " + ex.getMessage(),
+                "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void clearCustomerInfo() {
+        txtMaKH.setText("");
+        txtTenKH.setText("");
+    }
+
+    private void displayCustomerInfo(HoaDon hoaDon) {
+        if (hoaDon.getMaKH() != null) {
+            KhachHang khachHang = hoaDon.getMaKH();
+            txtMaKH.setText(String.valueOf(khachHang.getId()));
+            txtTenKH.setText(khachHang.getHoTen());
+        } else {
+            txtMaKH.setText("");
+            txtTenKH.setText("Khách lẻ");
         }
     }
     

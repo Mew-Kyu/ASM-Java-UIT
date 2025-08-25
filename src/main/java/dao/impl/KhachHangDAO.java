@@ -63,12 +63,20 @@ public class KhachHangDAO implements IKhachHangDAO {
     @Override
     public KhachHang findById(int maKH) {
         EntityManager em = emf.createEntityManager();
-        return em.find(KhachHang.class, maKH);
+        try {
+            return em.find(KhachHang.class, maKH);
+        } finally {
+            em.close();
+        }
     }
 
     @Override
     public List<KhachHang> findAll() {
         EntityManager em = emf.createEntityManager();
-        return em.createQuery("SELECT k FROM KhachHang k", KhachHang.class).getResultList();
+        try {
+            return em.createQuery("SELECT k FROM KhachHang k", KhachHang.class).getResultList();
+        } finally {
+            em.close();
+        }
     }
 }

@@ -268,7 +268,7 @@ public class PhieuDoiTraServiceImpl implements IPhieuDoiTraService {
     @Override
     public boolean kiemTraHoaDonCoTheDoisTra(int maHD) throws BusinessException {
         try {
-            HoaDon hoaDon = hoaDonDAO.findById(maHD);
+            HoaDon hoaDon = hoaDonDAO.findByIdWithDetails(maHD);
             if (hoaDon == null) {
                 return false;
             }

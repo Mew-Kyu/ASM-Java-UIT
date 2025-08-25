@@ -169,7 +169,8 @@ public class ThemSanPhamDialog extends JDialog {
     private void loadData() {
         tableModel.setRowCount(0);
         try {
-            List<BienTheSanPham> list = bienTheController.getAll();
+            // Eager fetch product/color/size to avoid lazy init when rendering
+            List<BienTheSanPham> list = bienTheController.getAllWithDetails();
 
             for (BienTheSanPham bt : list) {
                 if (bt.getSoLuong() > 0) { // Only show products in stock
@@ -198,7 +199,7 @@ public class ThemSanPhamDialog extends JDialog {
         tableModel.setRowCount(0);
 
         try {
-            List<BienTheSanPham> list = bienTheController.getAll();
+            List<BienTheSanPham> list = bienTheController.getAllWithDetails();
 
             for (BienTheSanPham bt : list) {
                 if (bt.getSoLuong() > 0) {
@@ -249,7 +250,7 @@ public class ThemSanPhamDialog extends JDialog {
             }
 
             // Get BienTheSanPham
-            BienTheSanPham bienThe = bienTheController.getById(maBienThe);
+            BienTheSanPham bienThe = bienTheController.getByIdWithDetails(maBienThe);
             if (bienThe == null) {
                 JOptionPane.showMessageDialog(this, "Không tìm thấy biến thể sản phẩm!");
                 return;
@@ -277,9 +278,14 @@ public class ThemSanPhamDialog extends JDialog {
                 JOptionPane.showMessageDialog(this, "Đã thêm sản phẩm vào hóa đơn!");
             }
             
-            // IMPORTANT: Recalculate and update invoice total
-            hoaDon.calculateTongTien();
-            hoaDonController.updateHoaDon(hoaDon);
+            // IMPORTANT: Recalculate and update invoice total on a fully initialized entity
+            HoaDon refreshed = hoaDonController.getHoaDonByIdWithDetails(hoaDon.getId());
+            if (refreshed != null) {
+                refreshed.calculateTongTien();
+                hoaDonController.updateHoaDon(refreshed);
+                // keep local reference updated
+                this.hoaDon = refreshed;
+            }
 
             // Update stock in BienTheSanPham
             bienThe.decreaseStock(soLuongThem);

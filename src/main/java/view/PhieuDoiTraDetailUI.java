@@ -511,11 +511,83 @@ public class PhieuDoiTraDetailUI extends JDialog {
     }
     
     private void inPhieu() {
-        JOptionPane.showMessageDialog(this, 
-            "Chức năng in phiếu đổi trả\n" +
-            "- In thông tin phiếu\n" +
-            "- In danh sách sản phẩm\n" +
-            "- In thông tin tài chính", 
-            "In phiếu", JOptionPane.INFORMATION_MESSAGE);
+        try {
+            // Validate phieu data
+            if (phieuDoiTra == null) {
+                JOptionPane.showMessageDialog(this, "Không có thông tin phiếu để in!",
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Check if phieu has sufficient data
+            if (phieuDoiTra.getLyDo() == null || phieuDoiTra.getLyDo().trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Phiếu chưa có đủ thông tin để in (thiếu lý do)!",
+                    "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Create file chooser
+            javax.swing.JFileChooser fileChooser = new javax.swing.JFileChooser();
+            fileChooser.setDialogTitle("Chọn vị trí lưu file PDF");
+
+            // Set default filename
+            String defaultFileName = String.format("PhieuDoiTra_%d_%s.pdf",
+                phieuDoiTra.getMaPhieuDT(),
+                phieuDoiTra.getNgayTao().format(java.time.format.DateTimeFormatter.ofPattern("ddMMyyyy")));
+            fileChooser.setSelectedFile(new java.io.File(defaultFileName));
+
+            // Set file filter for PDF
+            javax.swing.filechooser.FileNameExtensionFilter filter =
+                new javax.swing.filechooser.FileNameExtensionFilter("PDF files", "pdf");
+            fileChooser.setFileFilter(filter);
+
+            int userSelection = fileChooser.showSaveDialog(this);
+
+            if (userSelection == javax.swing.JFileChooser.APPROVE_OPTION) {
+                java.io.File fileToSave = fileChooser.getSelectedFile();
+                String filePath = fileToSave.getAbsolutePath();
+
+                // Ensure file has .pdf extension
+                if (!filePath.toLowerCase().endsWith(".pdf")) {
+                    filePath += ".pdf";
+                }
+
+                // Generate PDF
+                util.PDFPhieuDoiTraGenerator.generatePhieuDoiTraPDF(phieuDoiTra, filePath);
+
+                JOptionPane.showMessageDialog(this,
+                    "Đã in phiếu đổi trả thành công!\nFile được lưu tại: " + filePath,
+                    "Thành công",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+                // Ask if user wants to open the PDF
+                int openFile = JOptionPane.showConfirmDialog(this,
+                    "Bạn có muốn mở file PDF vừa tạo không?",
+                    "Mở file",
+                    JOptionPane.YES_NO_OPTION);
+
+                if (openFile == JOptionPane.YES_OPTION) {
+                    try {
+                        java.awt.Desktop.getDesktop().open(new java.io.File(filePath));
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(this,
+                            "Không thể mở file PDF. Vui lòng mở thủ công tại: " + filePath,
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+            }
+
+        } catch (java.io.IOException e) {
+            JOptionPane.showMessageDialog(this,
+                "Lỗi khi tạo file PDF: " + e.getMessage(),
+                "Lỗi",
+                JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Lỗi không xác định: " + e.getMessage(),
+                "Lỗi",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 }

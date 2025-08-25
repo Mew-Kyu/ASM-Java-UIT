@@ -245,7 +245,8 @@ public class HoaDonUI extends JFrame {
     private void loadHoaDonTable() {
         tableModelHoaDon.setRowCount(0);
         try {
-            List<HoaDon> list = hoaDonController.getAllHoaDon();
+            // Use eager fetch to avoid lazy initialization when rendering table
+            List<HoaDon> list = hoaDonController.getAllHoaDonWithDetails();
             for (HoaDon hd : list) {
                 Object[] row = {
                         hd.getId(),
@@ -398,7 +399,8 @@ public class HoaDonUI extends JFrame {
             }
 
             int id = Integer.parseInt(txtMaHD.getText().trim());
-            HoaDon hoaDon = hoaDonController.getHoaDonById(id);
+            // Load with details to avoid lazy initialization issues in the dialog
+            HoaDon hoaDon = hoaDonController.getHoaDonByIdWithDetails(id);
 
             if (hoaDon == null) {
                 JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn!");
@@ -475,7 +477,8 @@ public class HoaDonUI extends JFrame {
         if (row >= 0) {
             try {
                 int id = (Integer) tableModelHoaDon.getValueAt(row, 0);
-                HoaDon hd = hoaDonController.getHoaDonById(id);
+                // Use detailed fetch for binding and later actions
+                HoaDon hd = hoaDonController.getHoaDonByIdWithDetails(id);
 
                 if (hd != null) {
                     txtMaHD.setText(String.valueOf(hd.getId()));

@@ -12,7 +12,13 @@ public class HoaDonController {
     }
 
     public List<HoaDon> getAllHoaDon() {
+        // fetch basic list for light operations
         return hoaDonDAO.findAll();
+    }
+
+    public List<HoaDon> getAllHoaDonWithDetails() {
+        // eager fetch related entities for UI rendering (avoid lazy errors)
+        return hoaDonDAO.findAllWithDetails();
     }
 
     public void addHoaDon(HoaDon hd) {
@@ -29,5 +35,9 @@ public class HoaDonController {
 
     public HoaDon getHoaDonById(int maHD) {
         return hoaDonDAO.findById(maHD);
+    }
+
+    public HoaDon getHoaDonByIdWithDetails(int maHD) {
+        return hoaDonDAO.findByIdWithDetails(maHD);
     }
 }
