@@ -36,7 +36,7 @@ public class BienTheSanPhamUI extends JFrame {
     private final KichThuocDAO kichThuocDAO = new KichThuocDAO();
 
     public BienTheSanPhamUI() {
-        setTitle("Quản Lý Kho Hàng - Inventory Management");
+        setTitle("Quản Lý Hàng Hóa");
         setSize(1200, 700);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -285,7 +285,7 @@ public class BienTheSanPhamUI extends JFrame {
         
         int modelRow = table.convertRowIndexToModel(row);
         Integer id = (Integer) tableModel.getValueAt(modelRow, 0);
-        BienTheSanPham bts = dao.findById(id);
+        BienTheSanPham bts = dao.findByIdWithDetails(id);
 
         if (bts != null) {
             txtId.setText(String.valueOf(bts.getId()));
@@ -543,7 +543,7 @@ public class BienTheSanPhamUI extends JFrame {
 
     private void showLowStockItems() {
         StringBuilder lowStockList = new StringBuilder();
-        List<BienTheSanPham> allItems = dao.findAll();
+        List<BienTheSanPham> allItems = dao.findAllWithDetails();
         int count = 0;
 
         lowStockList.append("DANH SÁCH SẢN PHẨM SẮP HẾT HÀNG (≤ 10 sản phẩm):\n\n");
