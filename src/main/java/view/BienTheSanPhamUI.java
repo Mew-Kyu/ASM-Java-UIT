@@ -23,12 +23,13 @@ public class BienTheSanPhamUI extends JFrame {
     private JTable table;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> rowSorter;
-    private JTextField txtId, txtSoLuong, txtGiaBan, txtSearchField;
-    private JComboBox<SanPham> cbSanPham;
+    private JTextField txtId, txtSoLuong, txtGiaBan, txtSearchField, txtSelectedProduct;
+    private JButton btnSelectProduct;
     private JComboBox<MauSac> cbMauSac;
     private JComboBox<KichThuoc> cbKichThuoc;
     private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnStockIn, btnStockOut, btnLowStock;
     private JLabel lblTotalItems, lblTotalValue, lblLowStockAlert;
+    private SanPham selectedProduct = null;
 
     private final BienTheSanPhamDAO dao = new BienTheSanPhamDAO();
     private final SanPhamDAO sanPhamDAO = new SanPhamDAO();
@@ -70,10 +71,13 @@ public class BienTheSanPhamUI extends JFrame {
         txtId = new JTextField();
         txtId.setEditable(false);
         txtSoLuong = new JTextField();
+        txtSoLuong.setPreferredSize(new Dimension(60, 25));
         txtGiaBan = new JTextField();
         txtSearchField = new JTextField(20);
+        txtSelectedProduct = new JTextField();
+        txtSelectedProduct.setEditable(false);
+        txtSelectedProduct.setPreferredSize(new Dimension(180, 25));
 
-        cbSanPham = new JComboBox<>();
         cbMauSac = new JComboBox<>();
         cbKichThuoc = new JComboBox<>();
 
@@ -92,6 +96,7 @@ public class BienTheSanPhamUI extends JFrame {
         btnStockOut.setPreferredSize(new Dimension(100, 30));
         btnLowStock = new JButton("Hàng Sắp Hết");
         btnLowStock.setPreferredSize(new Dimension(120, 30));
+        btnSelectProduct = new JButton("Chọn Sản Phẩm");
 
         // Statistics labels
         lblTotalItems = new JLabel("Tổng số mặt hàng: 0");
@@ -143,17 +148,19 @@ public class BienTheSanPhamUI extends JFrame {
         gbc.gridx = 2;
         formPanel.add(new JLabel("Sản Phẩm:"), gbc);
         gbc.gridx = 3;
-        formPanel.add(cbSanPham, gbc);
+        formPanel.add(txtSelectedProduct, gbc);
+        gbc.gridx = 4;
+        formPanel.add(btnSelectProduct, gbc);
 
         // Row 2
         gbc.gridx = 0; gbc.gridy = 1;
-        formPanel.add(new JLabel("Màu Sắc:"), gbc);
-        gbc.gridx = 1;
-        formPanel.add(cbMauSac, gbc);
-        gbc.gridx = 2;
         formPanel.add(new JLabel("Kích Thước:"), gbc);
-        gbc.gridx = 3;
+        gbc.gridx = 1;
         formPanel.add(cbKichThuoc, gbc);
+        gbc.gridx = 2;
+        formPanel.add(new JLabel("Màu Sắc:"), gbc);
+        gbc.gridx = 3;
+        formPanel.add(cbMauSac, gbc);
 
         // Row 3
         gbc.gridx = 0; gbc.gridy = 2;
@@ -185,14 +192,6 @@ public class BienTheSanPhamUI extends JFrame {
     }
 
     private void loadComboBoxData() {
-        // Load SanPham
-        cbSanPham.removeAllItems();
-        cbSanPham.addItem(null);
-        List<SanPham> sanPhams = sanPhamDAO.findAll();
-        for (SanPham sp : sanPhams) {
-            cbSanPham.addItem(sp);
-        }
-
         // Load MauSac
         cbMauSac.removeAllItems();
         cbMauSac.addItem(null);
@@ -239,6 +238,7 @@ public class BienTheSanPhamUI extends JFrame {
         btnStockIn.addActionListener(e -> stockInDialog());
         btnStockOut.addActionListener(e -> stockOutDialog());
         btnLowStock.addActionListener(e -> showLowStockItems());
+        btnSelectProduct.addActionListener(e -> selectProductDialog());
     }
 
     private void loadTable() {
@@ -291,7 +291,8 @@ public class BienTheSanPhamUI extends JFrame {
             txtId.setText(String.valueOf(bts.getId()));
             txtSoLuong.setText(String.valueOf(bts.getSoLuong()));
             txtGiaBan.setText(bts.getGiaBan().toString());
-            cbSanPham.setSelectedItem(bts.getMaSP());
+            selectedProduct = bts.getMaSP(); // Cập nhật selectedProduct
+            txtSelectedProduct.setText(bts.getMaSP() != null ? bts.getMaSP().getTenSP() : "N/A");
             cbMauSac.setSelectedItem(bts.getMaMau());
             cbKichThuoc.setSelectedItem(bts.getMaSize());
         }
@@ -391,11 +392,10 @@ public class BienTheSanPhamUI extends JFrame {
 
             int soLuong = Integer.parseInt(txtSoLuong.getText());
             BigDecimal giaBan = new BigDecimal(txtGiaBan.getText());
-            SanPham sanPham = (SanPham) cbSanPham.getSelectedItem();
             MauSac mauSac = (MauSac) cbMauSac.getSelectedItem();
             KichThuoc kichThuoc = (KichThuoc) cbKichThuoc.getSelectedItem();
 
-            BienTheSanPham bts = new BienTheSanPham(soLuong, giaBan, sanPham, kichThuoc, mauSac);
+            BienTheSanPham bts = new BienTheSanPham(soLuong, giaBan, selectedProduct, kichThuoc, mauSac);
             dao.insert(bts);
             loadTable();
             clearForm();
@@ -422,7 +422,7 @@ public class BienTheSanPhamUI extends JFrame {
             if (bts != null) {
                 bts.setSoLuong(soLuong);
                 bts.setGiaBan(giaBan);
-                bts.setMaSP((SanPham) cbSanPham.getSelectedItem());
+                bts.setMaSP(selectedProduct);
                 bts.setMaMau((MauSac) cbMauSac.getSelectedItem());
                 bts.setMaSize((KichThuoc) cbKichThuoc.getSelectedItem());
 
@@ -573,8 +573,16 @@ public class BienTheSanPhamUI extends JFrame {
         JOptionPane.showMessageDialog(this, scrollPane, "Cảnh Báo Hết Hàng", JOptionPane.WARNING_MESSAGE);
     }
 
+    private void selectProductDialog() {
+        SanPham product = ProductSelectionDialog.showDialog(this);
+        if (product != null) {
+            selectedProduct = product;
+            txtSelectedProduct.setText(product.getTenSP());
+        }
+    }
+
     private boolean validateInput() {
-        if (cbSanPham.getSelectedItem() == null) {
+        if (selectedProduct == null) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn sản phẩm!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return false;
         }
@@ -624,10 +632,11 @@ public class BienTheSanPhamUI extends JFrame {
         txtId.setText("");
         txtSoLuong.setText("");
         txtGiaBan.setText("");
-        cbSanPham.setSelectedIndex(0);
+        txtSelectedProduct.setText("");
         cbMauSac.setSelectedIndex(0);
         cbKichThuoc.setSelectedIndex(0);
         table.clearSelection();
+        selectedProduct = null;
     }
 
     public static void main(String[] args) {
