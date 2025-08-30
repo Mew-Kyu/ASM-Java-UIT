@@ -21,6 +21,15 @@ public class HoaDon {
     @Column(name = "TongTien", precision = 18, scale = 2)
     private BigDecimal tongTien = BigDecimal.ZERO;
 
+    @Column(name = "MaHTTT")
+    private Integer maHTTT;
+
+    @Column(name = "PhiThanhToan", precision = 18, scale = 2)
+    private BigDecimal phiThanhToan;
+
+    @Column(name = "TrangThaiThanhToan", length = 20)
+    private String trangThaiThanhToan;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaKH")
     private KhachHang maKH;
@@ -73,6 +82,30 @@ public class HoaDon {
 
     public void setTongTien(BigDecimal tongTien) {
         this.tongTien = tongTien;
+    }
+
+    public Integer getMaHTTT() {
+        return maHTTT;
+    }
+
+    public void setMaHTTT(Integer maHTTT) {
+        this.maHTTT = maHTTT;
+    }
+
+    public BigDecimal getPhiThanhToan() {
+        return phiThanhToan;
+    }
+
+    public void setPhiThanhToan(BigDecimal phiThanhToan) {
+        this.phiThanhToan = phiThanhToan;
+    }
+
+    public String getTrangThaiThanhToan() {
+        return trangThaiThanhToan;
+    }
+
+    public void setTrangThaiThanhToan(String trangThaiThanhToan) {
+        this.trangThaiThanhToan = trangThaiThanhToan;
     }
 
     public KhachHang getMaKH() {
@@ -153,6 +186,9 @@ public class HoaDon {
                 "id=" + id +
                 ", ngayLap=" + ngayLap +
                 ", tongTien=" + tongTien +
+                ", maHTTT=" + maHTTT +
+                ", phiThanhToan=" + phiThanhToan +
+                ", trangThaiThanhToan='" + trangThaiThanhToan + '\'' +
                 ", khachHang=" + (maKH != null ? maKH.getHoTen() : "Khách lẻ") +
                 ", nhanVien=" + (maNV != null ? maNV.getHoTen() : "null") +
                 ", soLuongItems=" + chiTietHoaDons.size() +

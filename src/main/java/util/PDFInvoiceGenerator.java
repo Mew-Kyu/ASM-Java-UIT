@@ -74,10 +74,34 @@ public class PDFInvoiceGenerator {
         infoTable.addCell(new Cell().add(new Paragraph("Mã hóa đơn: " + hoaDon.getId()).setFont(font)));
         infoTable.addCell(new Cell().add(new Paragraph("Ngày lập: " + hoaDon.getNgayLap().format(DATE_FORMATTER)).setFont(font)));
         
-        String khachHang = hoaDon.getMaKH() != null ? hoaDon.getMaKH().getHoTen() : "Khách lẻ";
+        // Safely access customer name to avoid lazy loading issues
+        String khachHang = "Khách lẻ";
+        try {
+            if (hoaDon.getMaKH() != null) {
+                khachHang = hoaDon.getMaKH().getHoTen();
+                if (khachHang == null || khachHang.trim().isEmpty()) {
+                    khachHang = "Khách lẻ";
+                }
+            }
+        } catch (Exception e) {
+            // Handle proxy initialization errors
+            khachHang = "Khách lẻ";
+        }
         infoTable.addCell(new Cell().add(new Paragraph("Khách hàng: " + khachHang).setFont(font)));
         
-        String nhanVien = hoaDon.getMaNV() != null ? hoaDon.getMaNV().getHoTen() : "N/A";
+        // Safely access employee name to avoid lazy loading issues
+        String nhanVien = "N/A";
+        try {
+            if (hoaDon.getMaNV() != null) {
+                nhanVien = hoaDon.getMaNV().getHoTen();
+                if (nhanVien == null || nhanVien.trim().isEmpty()) {
+                    nhanVien = "N/A";
+                }
+            }
+        } catch (Exception e) {
+            // Handle proxy initialization errors
+            nhanVien = "N/A";
+        }
         infoTable.addCell(new Cell().add(new Paragraph("Nhân viên: " + nhanVien).setFont(font)));
         
         document.add(infoTable);
@@ -105,15 +129,41 @@ public class PDFInvoiceGenerator {
         for (ChiTietHoaDon chiTiet : chiTietList) {
             productTable.addCell(new Cell().add(new Paragraph(String.valueOf(stt++)).setFont(font)).setTextAlignment(TextAlignment.CENTER));
             
+            // Safely build product name to avoid lazy loading issues
             String tenSanPham = "N/A";
-            if (chiTiet.getMaBienThe() != null && chiTiet.getMaBienThe().getMaSP() != null) {
-                tenSanPham = chiTiet.getMaBienThe().getMaSP().getTenSP();
-                if (chiTiet.getMaBienThe().getMaMau() != null) {
-                    tenSanPham += " - " + chiTiet.getMaBienThe().getMaMau().getTenMau();
+            try {
+                if (chiTiet.getMaBienThe() != null && chiTiet.getMaBienThe().getMaSP() != null) {
+                    tenSanPham = chiTiet.getMaBienThe().getMaSP().getTenSP();
+                    if (tenSanPham == null || tenSanPham.trim().isEmpty()) {
+                        tenSanPham = "N/A";
+                    } else {
+                        // Add color and size information if available
+                        try {
+                            if (chiTiet.getMaBienThe().getMaMau() != null) {
+                                String mauSac = chiTiet.getMaBienThe().getMaMau().getTenMau();
+                                if (mauSac != null && !mauSac.trim().isEmpty()) {
+                                    tenSanPham += " - " + mauSac;
+                                }
+                            }
+                        } catch (Exception e) {
+                            // Ignore color loading errors
+                        }
+
+                        try {
+                            if (chiTiet.getMaBienThe().getMaSize() != null) {
+                                String kichThuoc = chiTiet.getMaBienThe().getMaSize().getTenSize();
+                                if (kichThuoc != null && !kichThuoc.trim().isEmpty()) {
+                                    tenSanPham += " - " + kichThuoc;
+                                }
+                            }
+                        } catch (Exception e) {
+                            // Ignore size loading errors
+                        }
+                    }
                 }
-                if (chiTiet.getMaBienThe().getMaSize() != null) {
-                    tenSanPham += " - " + chiTiet.getMaBienThe().getMaSize().getTenSize();
-                }
+            } catch (Exception e) {
+                // Handle proxy initialization errors
+                tenSanPham = "N/A";
             }
             productTable.addCell(new Cell().add(new Paragraph(tenSanPham).setFont(font)));
             

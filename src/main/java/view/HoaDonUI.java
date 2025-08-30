@@ -5,6 +5,7 @@ import controller.ChiTietHoaDonController;
 import controller.HoaDonController;
 import controller.KhachHangController;
 import controller.NhanVienController;
+import controller.HinhThucThanhToanController;
 import model.*;
 import util.SessionManager;
 
@@ -26,6 +27,8 @@ public class HoaDonUI extends JFrame {
     private JButton btnSelectEmployee, btnSelectCustomer;
     private JRadioButton radioKhachLe, radioHoiVien;
     private ButtonGroup customerTypeGroup;
+    private JComboBox<HinhThucThanhToan> cboHinhThucThanhToan;
+    private JComboBox<String> cboTrangThaiThanhToan;
     private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnViewDetails, btnAddDetail, btnPrintPDF;
     private JTable tableHoaDon;
     private DefaultTableModel tableModelHoaDon;
@@ -37,6 +40,7 @@ public class HoaDonUI extends JFrame {
     private NhanVienController nhanVienController;
     private ChiTietHoaDonController chiTietController;
     private BienTheSanPhamController bienTheController;
+    private HinhThucThanhToanController hinhThucThanhToanController;
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -56,6 +60,7 @@ public class HoaDonUI extends JFrame {
         nhanVienController = new NhanVienController();
         chiTietController = new ChiTietHoaDonController();
         bienTheController = new BienTheSanPhamController();
+        hinhThucThanhToanController = new HinhThucThanhToanController();
     }
 
     private void initComponents() {
@@ -133,7 +138,6 @@ public class HoaDonUI extends JFrame {
         customerTypeGroup = new ButtonGroup();
         customerTypeGroup.add(radioKhachLe);
         customerTypeGroup.add(radioHoiVien);
-        customerTypeGroup.add(btnSelectCustomer);
 
         gbc.gridx = 2; gbc.fill = GridBagConstraints.NONE;
         btnSelectEmployee = new JButton("Chọn NV");
@@ -147,6 +151,34 @@ public class HoaDonUI extends JFrame {
         txtTongTien.setEditable(false);
         txtTongTien.setBackground(Color.LIGHT_GRAY);
         panel.add(txtTongTien, gbc);
+
+        // Row 4 - Payment method and status
+        gbc.gridx = 0; gbc.gridy = 3; gbc.fill = GridBagConstraints.NONE;
+        panel.add(new JLabel("Hình thức TT:"), gbc);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        cboHinhThucThanhToan = new JComboBox<>();
+        cboHinhThucThanhToan.setPreferredSize(new Dimension(150, 25));
+        cboHinhThucThanhToan.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof HinhThucThanhToan) {
+                    HinhThucThanhToan httt = (HinhThucThanhToan) value;
+                    setText(httt.getTenHTTT());
+                } else if (value == null) {
+                    setText("-- Chọn hình thức thanh toán --");
+                }
+                return this;
+            }
+        });
+        panel.add(cboHinhThucThanhToan, gbc);
+
+        gbc.gridx = 2; gbc.fill = GridBagConstraints.NONE;
+        panel.add(new JLabel("Trạng thái TT:"), gbc);
+        gbc.gridx = 3; gbc.fill = GridBagConstraints.HORIZONTAL;
+        cboTrangThaiThanhToan = new JComboBox<>();
+        cboTrangThaiThanhToan.setPreferredSize(new Dimension(150, 25));
+        panel.add(cboTrangThaiThanhToan, gbc);
 
         return panel;
     }
@@ -280,7 +312,6 @@ public class HoaDonUI extends JFrame {
 
     private void loadComboBoxes() {
         try {
-            // Load customers
             // Set current user as default employee
             try {
                 TaiKhoan currentUser = SessionManager.getInstance().getCurrentUser();
@@ -292,6 +323,26 @@ public class HoaDonUI extends JFrame {
                 // If there's an issue with current user, just continue without setting default
             }
 
+            // Load payment methods
+            DefaultComboBoxModel<HinhThucThanhToan> paymentMethodModel = new DefaultComboBoxModel<>();
+            cboHinhThucThanhToan.setModel(paymentMethodModel);
+            paymentMethodModel.addElement(null); // Add empty option
+            
+            List<HinhThucThanhToan> paymentMethods = hinhThucThanhToanController.getActiveHinhThucThanhToan();
+            for (HinhThucThanhToan method : paymentMethods) {
+                paymentMethodModel.addElement(method);
+            }
+            cboHinhThucThanhToan.setSelectedIndex(0); // Select empty option
+
+            // Load payment statuses
+            DefaultComboBoxModel<String> paymentStatusModel = new DefaultComboBoxModel<>();
+            cboTrangThaiThanhToan.setModel(paymentStatusModel);
+            paymentStatusModel.addElement(null);
+            paymentStatusModel.addElement("PENDING");
+            paymentStatusModel.addElement("COMPLETED");
+            paymentStatusModel.addElement("FAILED");
+            cboTrangThaiThanhToan.setSelectedIndex(0); // Default to "Chưa thanh toán"
+
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi tải combo box: " + e.getMessage());
         }
@@ -301,7 +352,7 @@ public class HoaDonUI extends JFrame {
         NhanVien employee = EmployeeSelectionDialog.showDialog(this);
         if (employee != null) {
             selectedEmployee = employee;
-            txtSelectedEmployee.setText(employee.getHoTen() + " - " + employee.getChucVu());
+
         }
     }
 
@@ -317,7 +368,6 @@ public class HoaDonUI extends JFrame {
         selectedCustomer = null;
         txtSelectedCustomer.setText("Khách lẻ");
     }
-
     private void addHoaDon() {
         try {
             LocalDate ngayLap = parseDate(txtNgayLap.getText().trim());
@@ -331,7 +381,6 @@ public class HoaDonUI extends JFrame {
             hoaDonController.addHoaDon(hd);
 
             JOptionPane.showMessageDialog(this, "Thêm hóa đơn thành công!");
-            clearFields();
             loadHoaDonTable();
 
         } catch (DateTimeParseException ex) {
@@ -355,6 +404,18 @@ public class HoaDonUI extends JFrame {
                 JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn!");
                 return;
             }
+
+            // Set payment method and status
+            HinhThucThanhToan selectedPaymentMethod = (HinhThucThanhToan) cboHinhThucThanhToan.getSelectedItem();
+            if (selectedPaymentMethod != null) {
+                hd.setMaHTTT(selectedPaymentMethod.getMaHTTT());
+            }
+
+            String selectedPaymentStatus = (String) cboTrangThaiThanhToan.getSelectedItem();
+            if (selectedPaymentStatus != null) {
+                hd.setTrangThaiThanhToan(selectedPaymentStatus);
+            }
+
 
             LocalDate ngayLap = parseDate(txtNgayLap.getText().trim());
 
@@ -515,13 +576,15 @@ public class HoaDonUI extends JFrame {
                         // Customer exists - set to "Hội viên"
                         radioHoiVien.setSelected(true);
                         btnSelectCustomer.setVisible(true);
+
                     } else {
                         txtSelectedCustomer.setText("Khách lẻ");
                         // No customer - set to "Khách lẻ"
                         radioKhachLe.setSelected(true);
                         btnSelectCustomer.setVisible(false);
                     }
-
+                    cboHinhThucThanhToan.setSelectedIndex(hd.getMaHTTT());
+                    cboTrangThaiThanhToan.setSelectedIndex(0);
                     selectedEmployee = hd.getMaNV();
                     if (selectedEmployee != null) {
                         txtSelectedEmployee.setText(selectedEmployee.getHoTen() + " - " + selectedEmployee.getChucVu());
@@ -547,7 +610,8 @@ public class HoaDonUI extends JFrame {
             }
 
             int hoaDonId = Integer.parseInt(txtMaHD.getText().trim());
-            HoaDon hoaDon = hoaDonController.getHoaDonById(hoaDonId);
+            // Use the method that loads all details to avoid lazy initialization errors
+            HoaDon hoaDon = hoaDonController.getHoaDonByIdWithDetails(hoaDonId);
 
             if (hoaDon == null) {
                 JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn!", "Lỗi", JOptionPane.ERROR_MESSAGE);

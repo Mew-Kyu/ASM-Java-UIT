@@ -60,7 +60,8 @@ public class ApplicationConfig {
         container.registerSingleton(IBienTheSanPhamDAO.class, new BienTheSanPhamDAO());
         container.registerSingleton(IMauSacDAO.class, new MauSacDAO());
         container.registerSingleton(IKichThuocDAO.class, new KichThuocDAO());
-        
+        container.registerSingleton(IHinhThucThanhToanDAO.class, new HinhThucThanhToanDAO());
+
         LOGGER.fine("DAOs registered successfully");
     }
     
