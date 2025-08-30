@@ -22,12 +22,15 @@ import java.io.File;
 import util.PDFInvoiceGenerator;
 
 public class HoaDonUI extends JFrame {
-    private JTextField txtMaHD, txtNgayLap, txtTongTien;
-    private JComboBox<KhachHang> cboKhachHang;
-    private JComboBox<NhanVien> cboNhanVien;
+    private JTextField txtMaHD, txtNgayLap, txtTongTien, txtSelectedEmployee, txtSelectedCustomer, txtCustomerName;
+    private JButton btnSelectEmployee, btnSelectCustomer;
+    private JRadioButton radioKhachLe, radioHoiVien;
+    private ButtonGroup customerTypeGroup;
     private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnViewDetails, btnAddDetail, btnPrintPDF;
     private JTable tableHoaDon;
     private DefaultTableModel tableModelHoaDon;
+    private NhanVien selectedEmployee = null;
+    private KhachHang selectedCustomer = null;
 
     private HoaDonController hoaDonController;
     private KhachHangController khachHangController;
@@ -56,18 +59,14 @@ public class HoaDonUI extends JFrame {
     }
 
     private void initComponents() {
-        // Main layout
         setLayout(new BorderLayout(10, 10));
 
-        // Top panel - Input form
         JPanel topPanel = createInputPanel();
         add(topPanel, BorderLayout.NORTH);
 
-        // Center panel - Table
         JPanel centerPanel = createTablePanel();
         add(centerPanel, BorderLayout.CENTER);
 
-        // Bottom panel - Buttons
         JPanel bottomPanel = createButtonPanel();
         add(bottomPanel, BorderLayout.SOUTH);
 
@@ -81,74 +80,69 @@ public class HoaDonUI extends JFrame {
         gbc.insets = new Insets(5, 5, 5, 5);
 
         // Row 1
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST;
         panel.add(new JLabel("Mã HĐ:"), gbc);
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         txtMaHD = new JTextField(10);
         txtMaHD.setEditable(false);
         panel.add(txtMaHD, gbc);
 
-        gbc.gridx = 2;
-        gbc.fill = GridBagConstraints.NONE;
+        gbc.gridx = 2; gbc.fill = GridBagConstraints.NONE;
         panel.add(new JLabel("Ngày lập:"), gbc);
-        gbc.gridx = 3;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 3; gbc.fill = GridBagConstraints.HORIZONTAL;
         txtNgayLap = new JTextField(10);
         txtNgayLap.setText(LocalDate.now().format(dateFormatter));
         panel.add(txtNgayLap, gbc);
 
-        // Row 2
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.fill = GridBagConstraints.NONE;
+        // Row 2 - Customer selection
+        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE;
         panel.add(new JLabel("Khách hàng:"), gbc);
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        cboKhachHang = new JComboBox<>();
-        cboKhachHang.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof KhachHang) {
-                    KhachHang kh = (KhachHang) value;
-                    setText(kh.getHoTen() + " - " + kh.getDienThoai());
-                } else if (value == null) {
-                    setText("Khách lẻ");
-                }
-                return this;
-            }
-        });
-        panel.add(cboKhachHang, gbc);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtSelectedCustomer = new JTextField();
+        txtSelectedCustomer.setEditable(false);
+        txtSelectedCustomer.setPreferredSize(new Dimension(150, 25));
+        txtSelectedCustomer.setText("Khách lẻ");
+        panel.add(txtSelectedCustomer, gbc);
 
-        gbc.gridx = 2;
-        gbc.fill = GridBagConstraints.NONE;
-        panel.add(new JLabel("Nhân viên:"), gbc);
+        // Radio buttons for customer type
+        gbc.gridx = 2; gbc.fill = GridBagConstraints.NONE;
+        radioKhachLe = new JRadioButton("Khách lẻ");
+        radioKhachLe.setSelected(true);
+        panel.add(radioKhachLe, gbc);
+
         gbc.gridx = 3;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        cboNhanVien = new JComboBox<>();
-        cboNhanVien.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof NhanVien) {
-                    NhanVien nv = (NhanVien) value;
-                    setText(nv.getHoTen() + " - " + nv.getChucVu());
-                }
-                return this;
-            }
-        });
-        panel.add(cboNhanVien, gbc);
+        radioHoiVien = new JRadioButton("Hội viên");
+        panel.add(radioHoiVien, gbc);
 
-        // Row 3
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.fill = GridBagConstraints.NONE;
+        // Customer selection button - moved after radio buttons
+        gbc.gridx = 4; gbc.fill = GridBagConstraints.NONE;
+        btnSelectCustomer = new JButton("Chọn KH");
+        btnSelectCustomer.setPreferredSize(new Dimension(90, 25));
+        panel.add(btnSelectCustomer, gbc);
+        btnSelectCustomer.setVisible(false);
+
+        // Row 3 - Employee selection
+        gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE;
+        panel.add(new JLabel("Nhân viên:"), gbc);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtSelectedEmployee = new JTextField();
+        txtSelectedEmployee.setEditable(false);
+        txtSelectedEmployee.setPreferredSize(new Dimension(150, 25));
+        panel.add(txtSelectedEmployee, gbc);
+
+        customerTypeGroup = new ButtonGroup();
+        customerTypeGroup.add(radioKhachLe);
+        customerTypeGroup.add(radioHoiVien);
+        customerTypeGroup.add(btnSelectCustomer);
+
+        gbc.gridx = 2; gbc.fill = GridBagConstraints.NONE;
+        btnSelectEmployee = new JButton("Chọn NV");
+        btnSelectEmployee.setPreferredSize(new Dimension(90, 25));
+        panel.add(btnSelectEmployee, gbc);
+
+        gbc.gridx = 3; gbc.fill = GridBagConstraints.NONE;
         panel.add(new JLabel("Tổng tiền:"), gbc);
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 4; gbc.fill = GridBagConstraints.HORIZONTAL;
         txtTongTien = new JTextField(10);
         txtTongTien.setEditable(false);
         txtTongTien.setBackground(Color.LIGHT_GRAY);
@@ -174,12 +168,12 @@ public class HoaDonUI extends JFrame {
         tableHoaDon.getTableHeader().setReorderingAllowed(false);
 
         // Set column widths
-        tableHoaDon.getColumnModel().getColumn(0).setPreferredWidth(60);  // Mã HĐ
-        tableHoaDon.getColumnModel().getColumn(1).setPreferredWidth(100); // Ngày lập
-        tableHoaDon.getColumnModel().getColumn(2).setPreferredWidth(150); // Khách hàng
-        tableHoaDon.getColumnModel().getColumn(3).setPreferredWidth(150); // Nhân viên
-        tableHoaDon.getColumnModel().getColumn(4).setPreferredWidth(120); // Tổng tiền
-        tableHoaDon.getColumnModel().getColumn(5).setPreferredWidth(80);  // Số items
+        tableHoaDon.getColumnModel().getColumn(0).setPreferredWidth(60);
+        tableHoaDon.getColumnModel().getColumn(1).setPreferredWidth(100);
+        tableHoaDon.getColumnModel().getColumn(2).setPreferredWidth(150);
+        tableHoaDon.getColumnModel().getColumn(3).setPreferredWidth(150);
+        tableHoaDon.getColumnModel().getColumn(4).setPreferredWidth(120);
+        tableHoaDon.getColumnModel().getColumn(5).setPreferredWidth(80);
 
         JScrollPane scrollPane = new JScrollPane(tableHoaDon);
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -229,12 +223,33 @@ public class HoaDonUI extends JFrame {
             loadData();
         });
         btnPrintPDF.addActionListener(e -> printInvoiceToPDF());
+        btnSelectEmployee.addActionListener(e -> selectEmployeeDialog());
+        btnSelectCustomer.addActionListener(e -> selectCustomerDialog());
+
+        // Add radio button event handlers
+        radioKhachLe.addActionListener(e -> {
+            if (radioKhachLe.isSelected()) {
+                selectedCustomer = null;
+                txtSelectedCustomer.setText("Khách lẻ");
+                btnSelectCustomer.setVisible(false);
+            }
+        });
+
+        radioHoiVien.addActionListener(e -> {
+            if (radioHoiVien.isSelected()) {
+                btnSelectCustomer.setVisible(true);
+                if (selectedCustomer == null) {
+                    txtSelectedCustomer.setText("");
+                }
+            }
+        });
 
         tableHoaDon.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 fillFieldsFromTable();
             }
         });
+
     }
 
     private void loadData() {
@@ -266,25 +281,12 @@ public class HoaDonUI extends JFrame {
     private void loadComboBoxes() {
         try {
             // Load customers
-            cboKhachHang.removeAllItems();
-            cboKhachHang.addItem(null); // For "Khách lẻ"
-            List<KhachHang> khachHangs = khachHangController.layDanhSachKhachHang();
-            for (KhachHang kh : khachHangs) {
-                cboKhachHang.addItem(kh);
-            }
-
-            // Load employees
-            cboNhanVien.removeAllItems();
-            List<NhanVien> nhanViens = nhanVienController.layDanhSachNhanVien();
-            for (NhanVien nv : nhanViens) {
-                cboNhanVien.addItem(nv);
-            }
-
             // Set current user as default employee
             try {
                 TaiKhoan currentUser = SessionManager.getInstance().getCurrentUser();
                 if (currentUser != null && currentUser.getMaNV() != null) {
-                    cboNhanVien.setSelectedItem(currentUser.getMaNV());
+                    selectedEmployee = currentUser.getMaNV();
+                    txtSelectedEmployee.setText(selectedEmployee.getHoTen() + " - " + selectedEmployee.getChucVu());
                 }
             } catch (Exception ex) {
                 // If there's an issue with current user, just continue without setting default
@@ -295,18 +297,37 @@ public class HoaDonUI extends JFrame {
         }
     }
 
+    private void selectEmployeeDialog() {
+        NhanVien employee = EmployeeSelectionDialog.showDialog(this);
+        if (employee != null) {
+            selectedEmployee = employee;
+            txtSelectedEmployee.setText(employee.getHoTen() + " - " + employee.getChucVu());
+        }
+    }
+
+    private void selectCustomerDialog() {
+        KhachHang customer = CustomerSelectionDialog.showDialog(this);
+        if (customer != null) {
+            selectedCustomer = customer;
+            txtSelectedCustomer.setText(customer.getHoTen());
+        }
+    }
+
+    private void setGuestCustomer() {
+        selectedCustomer = null;
+        txtSelectedCustomer.setText("Khách lẻ");
+    }
+
     private void addHoaDon() {
         try {
             LocalDate ngayLap = parseDate(txtNgayLap.getText().trim());
-            KhachHang khachHang = (KhachHang) cboKhachHang.getSelectedItem();
-            NhanVien nhanVien = (NhanVien) cboNhanVien.getSelectedItem();
 
-            if (nhanVien == null) {
+            if (selectedEmployee == null) {
                 JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên!");
                 return;
             }
 
-            HoaDon hd = new HoaDon(ngayLap, khachHang, nhanVien);
+            HoaDon hd = new HoaDon(ngayLap, selectedCustomer, selectedEmployee);
             hoaDonController.addHoaDon(hd);
 
             JOptionPane.showMessageDialog(this, "Thêm hóa đơn thành công!");
@@ -336,17 +357,15 @@ public class HoaDonUI extends JFrame {
             }
 
             LocalDate ngayLap = parseDate(txtNgayLap.getText().trim());
-            KhachHang khachHang = (KhachHang) cboKhachHang.getSelectedItem();
-            NhanVien nhanVien = (NhanVien) cboNhanVien.getSelectedItem();
 
-            if (nhanVien == null) {
+            if (selectedEmployee == null) {
                 JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên!");
                 return;
             }
 
             hd.setNgayLap(ngayLap);
-            hd.setMaKH(khachHang);
-            hd.setMaNV(nhanVien);
+            hd.setMaKH(selectedCustomer);
+            hd.setMaNV(selectedEmployee);
 
             hoaDonController.updateHoaDon(hd);
 
@@ -456,19 +475,24 @@ public class HoaDonUI extends JFrame {
         txtMaHD.setText("");
         txtNgayLap.setText(LocalDate.now().format(dateFormatter));
         txtTongTien.setText("");
-        cboKhachHang.setSelectedIndex(0);
-        if (cboNhanVien.getItemCount() > 0) {
-            try {
-                TaiKhoan currentUser = SessionManager.getInstance().getCurrentUser();
-                if (currentUser != null && currentUser.getMaNV() != null) {
-                    cboNhanVien.setSelectedItem(currentUser.getMaNV());
-                } else {
-                    cboNhanVien.setSelectedIndex(0);
-                }
-            } catch (Exception ex) {
-                cboNhanVien.setSelectedIndex(0);
+        selectedCustomer = null;
+        txtSelectedCustomer.setText("Khách lẻ");
+
+        try {
+            TaiKhoan currentUser = SessionManager.getInstance().getCurrentUser();
+            if (currentUser != null && currentUser.getMaNV() != null) {
+                selectedEmployee = currentUser.getMaNV();
+                txtSelectedEmployee.setText(selectedEmployee.getHoTen() + " - " + selectedEmployee.getChucVu());
+            } else {
+                selectedEmployee = null;
+                txtSelectedEmployee.setText("");
             }
+        } catch (Exception ex) {
+            selectedEmployee = null;
+            txtSelectedEmployee.setText("");
         }
+        radioKhachLe.setSelected(true);
+
         tableHoaDon.clearSelection();
     }
 
@@ -484,8 +508,26 @@ public class HoaDonUI extends JFrame {
                     txtMaHD.setText(String.valueOf(hd.getId()));
                     txtNgayLap.setText(hd.getNgayLap().format(dateFormatter));
                     txtTongTien.setText(String.format("%,.0f VNĐ", hd.getTongTien()));
-                    cboKhachHang.setSelectedItem(hd.getMaKH());
-                    cboNhanVien.setSelectedItem(hd.getMaNV());
+
+                    selectedCustomer = hd.getMaKH();
+                    if (selectedCustomer != null) {
+                        txtSelectedCustomer.setText(selectedCustomer.getHoTen());
+                        // Customer exists - set to "Hội viên"
+                        radioHoiVien.setSelected(true);
+                        btnSelectCustomer.setVisible(true);
+                    } else {
+                        txtSelectedCustomer.setText("Khách lẻ");
+                        // No customer - set to "Khách lẻ"
+                        radioKhachLe.setSelected(true);
+                        btnSelectCustomer.setVisible(false);
+                    }
+
+                    selectedEmployee = hd.getMaNV();
+                    if (selectedEmployee != null) {
+                        txtSelectedEmployee.setText(selectedEmployee.getHoTen() + " - " + selectedEmployee.getChucVu());
+                    } else {
+                        txtSelectedEmployee.setText("");
+                    }
                 }
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Lỗi khi tải thông tin hóa đơn: " + e.getMessage());
@@ -496,28 +538,28 @@ public class HoaDonUI extends JFrame {
     private LocalDate parseDate(String dateStr) throws DateTimeParseException {
         return LocalDate.parse(dateStr, dateFormatter);
     }
-    
+
     private void printInvoiceToPDF() {
         try {
             if (txtMaHD.getText().trim().isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Vui lòng chọn hóa đơn để in!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            
+
             int hoaDonId = Integer.parseInt(txtMaHD.getText().trim());
             HoaDon hoaDon = hoaDonController.getHoaDonById(hoaDonId);
-            
+
             if (hoaDon == null) {
                 JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
+
             // Open file chooser for save location
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Chọn nơi lưu file PDF");
             fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("PDF Files", "pdf"));
             fileChooser.setSelectedFile(new File("HoaDon_" + hoaDonId + ".pdf"));
-            
+
             int userSelection = fileChooser.showSaveDialog(this);
             
             if (userSelection == JFileChooser.APPROVE_OPTION) {
@@ -531,16 +573,16 @@ public class HoaDonUI extends JFrame {
                 
                 // Generate PDF
                 PDFInvoiceGenerator.generateInvoicePDF(hoaDon, filePath);
-                
-                JOptionPane.showMessageDialog(this, 
+
+                JOptionPane.showMessageDialog(this,
                     "Đã in hóa đơn thành công!\nFile được lưu tại: " + filePath, 
                     "Thành công", 
                     JOptionPane.INFORMATION_MESSAGE);
                 
                 // Ask if user wants to open the PDF
-                int openFile = JOptionPane.showConfirmDialog(this, 
-                    "Bạn có muốn mở file PDF vừa tạo không?", 
-                    "Mở file", 
+                int openFile = JOptionPane.showConfirmDialog(this,
+                    "Bạn có muốn mở file PDF vừa tạo không?",
+                    "Mở file",
                     JOptionPane.YES_NO_OPTION);
                 
                 if (openFile == JOptionPane.YES_OPTION) {
