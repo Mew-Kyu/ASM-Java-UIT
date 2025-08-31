@@ -38,6 +38,7 @@ public class DanhMucUI extends JFrame {
         setSize(600, 400);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
+        setResizable(false); // Prevent window resizing/zooming
         initComponents();
         loadTable();
     }

@@ -85,7 +85,7 @@ public class BienTheSanPhamUI extends JFrame {
         txtGiaBan.setHorizontalAlignment(JTextField.RIGHT);
 
         txtSearchField = new JTextField(20);
-        txtSearchField.setToolTipText("Tìm kiếm theo tên sản phẩm, màu sắc, kích thước...");
+        txtSearchField.setToolTipText("Tìm kiếm theo tên sản ph���m, màu sắc, kích thước...");
 
         txtSelectedProduct = new JTextField();
         txtSelectedProduct.setEditable(false);
@@ -151,12 +151,12 @@ public class BienTheSanPhamUI extends JFrame {
         btnLowStock.setFocusPainted(false);
         btnLowStock.setToolTipText("Xem danh sách hàng sắp hết");
 
-        btnSelectProduct = new JButton("📋 Chọn Sản Phẩm");
-        btnSelectProduct.setPreferredSize(new Dimension(140, 30));
+        btnSelectProduct = new JButton("📋 Chọn");
+        btnSelectProduct.setPreferredSize(new Dimension(80, 30));
         btnSelectProduct.setBackground(new Color(103, 58, 183));
         btnSelectProduct.setForeground(Color.WHITE);
         btnSelectProduct.setFocusPainted(false);
-        btnSelectProduct.setToolTipText("Mở danh sách sản phẩm để chọn");
+        btnSelectProduct.setToolTipText("Mở danh sách sản phẩm đã chọn");
 
         // Statistics labels
         lblTotalItems = new JLabel("Tổng số mặt hàng: 0");
@@ -195,42 +195,169 @@ public class BienTheSanPhamUI extends JFrame {
 
         // Form panel
         JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBorder(BorderFactory.createTitledBorder("Thông Tin Sản Phẩm"));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        formPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+                "📝 Thông tin sản phẩm",
+                javax.swing.border.TitledBorder.LEFT,
+                javax.swing.border.TitledBorder.TOP,
+                new Font("SansSerif", Font.BOLD, 14),
+                new Color(51, 102, 153)),
+            BorderFactory.createEmptyBorder(15, 20, 20, 20)
+        ));
+        formPanel.setBackground(new Color(248, 249, 250));
 
-        // Row 1
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Create styled labels with icons
+        JLabel lblId = new JLabel("🏷️ Mã biến thể:");
+        lblId.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblId.setForeground(new Color(68, 68, 68));
+
+        JLabel lblSanPham = new JLabel("📦 Sản phẩm:");
+        lblSanPham.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblSanPham.setForeground(new Color(68, 68, 68));
+
+        JLabel lblKichThuoc = new JLabel("📏 Kích thước:");
+        lblKichThuoc.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblKichThuoc.setForeground(new Color(68, 68, 68));
+
+        JLabel lblMauSac = new JLabel("🎨 Màu sắc:");
+        lblMauSac.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblMauSac.setForeground(new Color(68, 68, 68));
+
+        JLabel lblSoLuong = new JLabel("📊 Số lượng:");
+        lblSoLuong.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblSoLuong.setForeground(new Color(68, 68, 68));
+
+        JLabel lblGiaBan = new JLabel("💰 Giá bán:");
+        lblGiaBan.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblGiaBan.setForeground(new Color(68, 68, 68));
+
+        // Style the input fields
+        txtId.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtId.setFont(new Font("SansSerif", Font.PLAIN, 12));
+
+        txtSelectedProduct.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(173, 216, 230)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtSelectedProduct.setFont(new Font("SansSerif", Font.PLAIN, 12));
+
+        txtSoLuong.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(173, 216, 230)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtSoLuong.setFont(new Font("SansSerif", Font.PLAIN, 12));
+
+        txtGiaBan.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(173, 216, 230)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtGiaBan.setFont(new Font("SansSerif", Font.PLAIN, 12));
+
+        // Style combo boxes
+        cbKichThuoc.setBorder(null);
+        cbKichThuoc.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        cbKichThuoc.setBackground(Color.WHITE);
+
+        cbMauSac.setBorder(null);
+        cbMauSac.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        cbMauSac.setBackground(Color.WHITE);
+
+        // Row 1 - Mã biến thể và S���n phẩm
         gbc.gridx = 0; gbc.gridy = 0;
-        formPanel.add(new JLabel("Mã Biến Thể:"), gbc);
+        gbc.gridwidth = 1;
+        gbc.weightx = 0;
+        formPanel.add(lblId, gbc);
+
         gbc.gridx = 1;
+        gbc.weightx = 0.2;
         formPanel.add(txtId, gbc);
+
         gbc.gridx = 2;
-        formPanel.add(new JLabel("Sản Phẩm:"), gbc);
+        gbc.weightx = 0;
+        gbc.insets = new Insets(8, 20, 8, 8);
+        formPanel.add(lblSanPham, gbc);
+
         gbc.gridx = 3;
+        gbc.weightx = 0.5;
+        gbc.insets = new Insets(8, 8, 8, 8);
         formPanel.add(txtSelectedProduct, gbc);
+
         gbc.gridx = 4;
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.NONE;
+        btnSelectProduct.setPreferredSize(new Dimension(120, 30));
+        btnSelectProduct.setFont(new Font("SansSerif", Font.BOLD, 11));
         formPanel.add(btnSelectProduct, gbc);
 
-        // Row 2
+        // Row 2 - Kích thước và Màu sắc
         gbc.gridx = 0; gbc.gridy = 1;
-        formPanel.add(new JLabel("Kích Thước:"), gbc);
+        gbc.weightx = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(8, 8, 8, 8);
+        formPanel.add(lblKichThuoc, gbc);
+
         gbc.gridx = 1;
+        gbc.weightx = 0.2;
         formPanel.add(cbKichThuoc, gbc);
+
         gbc.gridx = 2;
-        formPanel.add(new JLabel("Màu Sắc:"), gbc);
+        gbc.weightx = 0;
+        gbc.insets = new Insets(8, 20, 8, 8);
+        formPanel.add(lblMauSac, gbc);
+
         gbc.gridx = 3;
+        gbc.weightx = 0.5;
+        gbc.insets = new Insets(8, 8, 8, 8);
         formPanel.add(cbMauSac, gbc);
 
-        // Row 3
+        // Row 3 - Số lượng và Giá bán
         gbc.gridx = 0; gbc.gridy = 2;
-        formPanel.add(new JLabel("Số Lượng:"), gbc);
+        gbc.weightx = 0;
+        formPanel.add(lblSoLuong, gbc);
+
         gbc.gridx = 1;
+        gbc.weightx = 0.2;
         formPanel.add(txtSoLuong, gbc);
+
         gbc.gridx = 2;
-        formPanel.add(new JLabel("Giá Bán:"), gbc);
+        gbc.weightx = 0;
+        gbc.insets = new Insets(8, 20, 8, 8);
+        formPanel.add(lblGiaBan, gbc);
+
         gbc.gridx = 3;
+        gbc.weightx = 0.5;
+        gbc.insets = new Insets(8, 8, 8, 8);
         formPanel.add(txtGiaBan, gbc);
+
+        // Add some visual separation
+        gbc.gridx = 0; gbc.gridy = 3;
+        gbc.gridwidth = 5;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(15, 0, 10, 0);
+        gbc.weightx = 1.0;
+        JSeparator separator = new JSeparator();
+        separator.setBackground(new Color(220, 220, 220));
+        formPanel.add(separator, gbc);
+
+        // Add instruction label
+        gbc.gridx = 0; gbc.gridy = 4;
+        gbc.gridwidth = 5;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets(5, 0, 10, 0);
+        gbc.weightx = 0;
+        JLabel instructionLabel = new JLabel("💡 Chọn một dòng trong bảng để chỉnh sửa hoặc nhập thông tin mới để thêm vào kho");
+        instructionLabel.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        instructionLabel.setForeground(new Color(102, 102, 102));
+        formPanel.add(instructionLabel, gbc);
 
         // Button panel
         JPanel btnPanel = new JPanel(new FlowLayout());

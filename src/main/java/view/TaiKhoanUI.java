@@ -49,6 +49,7 @@ public class TaiKhoanUI extends JFrame {
         setSize(800, 500);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
+        setResizable(false); // Prevent window resizing/zooming
         initComponents();
         loadTable();
 

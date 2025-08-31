@@ -79,8 +79,8 @@ public class HoaDonUI extends JFrame {
     public HoaDonUI() {
         initControllers();
         setTitle("Quản Lý Hóa Đơn");
-        setSize(1200, 950);
-        setMinimumSize(new Dimension(1200, 950)); // Set minimum size to ensure search panel is fully visible
+        setSize(1200, 1000);
+        setMinimumSize(new Dimension(1200, 1000)); // Set minimum size to ensure search panel is fully visible
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         initComponents();

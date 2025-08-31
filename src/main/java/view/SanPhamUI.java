@@ -7,6 +7,7 @@ import util.SessionManager;
 import util.RoleManager;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
@@ -84,38 +85,134 @@ public class SanPhamUI extends JFrame {
 
         // Input panel with better layout
         JPanel inputPanel = new JPanel(new GridBagLayout());
-        inputPanel.setBorder(BorderFactory.createTitledBorder("Thông tin sản phẩm"));
+        inputPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+                "📝 Thông tin sản phẩm",
+                TitledBorder.LEFT,
+                TitledBorder.TOP,
+                new Font("SansSerif", Font.BOLD, 14),
+                new Color(51, 102, 153)),
+            BorderFactory.createEmptyBorder(10, 15, 15, 15)
+        ));
+        inputPanel.setBackground(new Color(248, 249, 250));
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(8, 8, 8, 8);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Row 1
+        // Create styled labels
+        JLabel lblId = new JLabel("🏷️ Mã sản phẩm:");
+        lblId.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblId.setForeground(new Color(68, 68, 68));
+
+        JLabel lblTen = new JLabel("📦 Tên sản phẩm:");
+        lblTen.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblTen.setForeground(new Color(68, 68, 68));
+
+        JLabel lblDanhMuc = new JLabel("📂 Danh mục:");
+        lblDanhMuc.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblDanhMuc.setForeground(new Color(68, 68, 68));
+
+        JLabel lblMoTa = new JLabel("📄 Mô tả:");
+        lblMoTa.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblMoTa.setForeground(new Color(68, 68, 68));
+
+        // Row 1 - Mã SP và Tên SP
         gbc.gridx = 0; gbc.gridy = 0;
-        inputPanel.add(new JLabel("Mã SP:"), gbc);
+        gbc.gridwidth = 1;
+        inputPanel.add(lblId, gbc);
+
         gbc.gridx = 1;
-        txtId = new JTextField(15);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.3;
+        txtId = new JTextField(12);
         txtId.setEnabled(false);
+        txtId.setBackground(new Color(240, 240, 240));
+        txtId.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtId.setFont(new Font("SansSerif", Font.PLAIN, 12));
         inputPanel.add(txtId, gbc);
 
         gbc.gridx = 2;
-        inputPanel.add(new JLabel("Tên SP:"), gbc);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        gbc.insets = new Insets(8, 20, 8, 8);
+        inputPanel.add(lblTen, gbc);
+
         gbc.gridx = 3;
-        txtTenSP = new JTextField(15);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.7;
+        gbc.insets = new Insets(8, 8, 8, 8);
+        txtTenSP = new JTextField(18);
+        txtTenSP.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(173, 216, 230)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtTenSP.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        txtTenSP.setToolTipText("Nhập tên sản phẩm (bắt buộc)");
         inputPanel.add(txtTenSP, gbc);
 
-        // Row 2
+        // Row 2 - Danh mục và Mô tả
         gbc.gridx = 0; gbc.gridy = 1;
-        inputPanel.add(new JLabel("Danh Mục:"), gbc);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        gbc.insets = new Insets(8, 8, 8, 8);
+        inputPanel.add(lblDanhMuc, gbc);
+
         gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.3;
         cmbDanhMuc = new JComboBox<>();
-        cmbDanhMuc.setPreferredSize(new Dimension(150, 25));
+        cmbDanhMuc.setPreferredSize(new Dimension(150, 30));
+        cmbDanhMuc.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(173, 216, 230)),
+            BorderFactory.createEmptyBorder(2, 5, 2, 5)
+        ));
+        cmbDanhMuc.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        cmbDanhMuc.setToolTipText("Chọn danh mục cho sản phẩm (bắt buộc)");
+        cmbDanhMuc.setBackground(Color.WHITE);
         inputPanel.add(cmbDanhMuc, gbc);
 
         gbc.gridx = 2;
-        inputPanel.add(new JLabel("Mô tả:"), gbc);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        gbc.insets = new Insets(8, 20, 8, 8);
+        inputPanel.add(lblMoTa, gbc);
+
         gbc.gridx = 3;
-        txtMoTa = new JTextField(15);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.7;
+        gbc.insets = new Insets(8, 8, 8, 8);
+        txtMoTa = new JTextField(18);
+        txtMoTa.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtMoTa.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        txtMoTa.setToolTipText("Nhập mô tả chi tiết về sản phẩm (tùy chọn)");
         inputPanel.add(txtMoTa, gbc);
+
+        // Add some visual separation
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridwidth = 4;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(15, 0, 5, 0);
+        JSeparator separator = new JSeparator();
+        separator.setBackground(new Color(220, 220, 220));
+        inputPanel.add(separator, gbc);
+
+        // Add instruction label
+        gbc.gridx = 0; gbc.gridy = 3;
+        gbc.gridwidth = 4;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets(5, 0, 0, 0);
+        JLabel instructionLabel = new JLabel("💡 Chọn một dòng trong bảng để chỉnh sửa hoặc nhập thông tin mới để thêm sản phẩm");
+        instructionLabel.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        instructionLabel.setForeground(new Color(102, 102, 102));
+        inputPanel.add(instructionLabel, gbc);
 
         // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout());

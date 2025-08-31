@@ -41,21 +41,146 @@ public class KhachHangUI extends BaseAuthenticatedUI {
         btnTimKiem.setPreferredSize(new Dimension(90, 25));
         panelSearch.add(btnTimKiem);
 
-        JPanel panelInput = new JPanel(new GridLayout(4, 2, 5, 5));
-        panelInput.setBorder(BorderFactory.createTitledBorder("Thông tin khách hàng"));
-        panelInput.add(new JLabel("Mã KH:"));
+        JPanel panelInput = new JPanel(new GridBagLayout());
+        panelInput.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+                "👥 Thông tin khách hàng",
+                javax.swing.border.TitledBorder.LEFT,
+                javax.swing.border.TitledBorder.TOP,
+                new Font("SansSerif", Font.BOLD, 14),
+                new Color(51, 102, 153)),
+            BorderFactory.createEmptyBorder(15, 20, 20, 20)
+        ));
+        panelInput.setBackground(new Color(248, 249, 250));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Create styled labels with icons
+        JLabel lblId = new JLabel("🏷️ Mã khách hàng:");
+        lblId.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblId.setForeground(new Color(68, 68, 68));
+
+        JLabel lblHoTen = new JLabel("👤 Họ và tên:");
+        lblHoTen.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblHoTen.setForeground(new Color(68, 68, 68));
+
+        JLabel lblDienThoai = new JLabel("📞 Điện thoại:");
+        lblDienThoai.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblDienThoai.setForeground(new Color(68, 68, 68));
+
+        JLabel lblDiaChi = new JLabel("🏠 Địa chỉ:");
+        lblDiaChi.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblDiaChi.setForeground(new Color(68, 68, 68));
+
+        // Style text fields
         txtId = new JTextField();
         txtId.setEditable(false);
-        panelInput.add(txtId);
-        panelInput.add(new JLabel("Họ tên:"));
+        txtId.setBackground(new Color(240, 240, 240));
+        txtId.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtId.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        txtId.setToolTipText("Mã khách hàng sẽ được tự động tạo");
+        txtId.setPreferredSize(new Dimension(150, 30));
+
         txtHoTen = new JTextField();
-        panelInput.add(txtHoTen);
-        panelInput.add(new JLabel("Điện thoại:"));
+        txtHoTen.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(173, 216, 230)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtHoTen.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        txtHoTen.setToolTipText("Nhập họ và tên đầy đủ của khách hàng (bắt buộc)");
+        txtHoTen.setPreferredSize(new Dimension(200, 30));
+
         txtDienThoai = new JTextField();
-        panelInput.add(txtDienThoai);
-        panelInput.add(new JLabel("Địa chỉ:"));
+        txtDienThoai.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(173, 216, 230)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtDienThoai.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        txtDienThoai.setToolTipText("Nhập số điện thoại (bắt buộc)");
+        txtDienThoai.setPreferredSize(new Dimension(150, 30));
+
         txtDiaChi = new JTextField();
-        panelInput.add(txtDiaChi);
+        txtDiaChi.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtDiaChi.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        txtDiaChi.setToolTipText("Nhập địa chỉ của khách hàng (tùy chọn)");
+        txtDiaChi.setPreferredSize(new Dimension(200, 30));
+
+        // Row 1 - Mã KH và Họ tên
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridwidth = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        panelInput.add(lblId, gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.4;
+        panelInput.add(txtId, gbc);
+
+        gbc.gridx = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        gbc.insets = new Insets(8, 20, 8, 8);
+        panelInput.add(lblHoTen, gbc);
+
+        gbc.gridx = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.6;
+        gbc.insets = new Insets(8, 8, 8, 8);
+        panelInput.add(txtHoTen, gbc);
+
+        // Row 2 - Điện thoại và Địa chỉ
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        panelInput.add(lblDienThoai, gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.4;
+        panelInput.add(txtDienThoai, gbc);
+
+        gbc.gridx = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        gbc.insets = new Insets(8, 20, 8, 8);
+        panelInput.add(lblDiaChi, gbc);
+
+        gbc.gridx = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.6;
+        gbc.insets = new Insets(8, 8, 8, 8);
+        panelInput.add(txtDiaChi, gbc);
+
+        // Add visual separation
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridwidth = 4;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(15, 0, 10, 0);
+        gbc.weightx = 1.0;
+        JSeparator separator = new JSeparator();
+        separator.setBackground(new Color(220, 220, 220));
+        panelInput.add(separator, gbc);
+
+        // Add instruction label
+        gbc.gridx = 0; gbc.gridy = 3;
+        gbc.gridwidth = 4;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets(5, 0, 10, 0);
+        gbc.weightx = 0;
+        JLabel instructionLabel = new JLabel("💡 Chọn một dòng trong bảng để chỉnh sửa hoặc nhập thông tin mới để thêm khách hàng");
+        instructionLabel.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        instructionLabel.setForeground(new Color(102, 102, 102));
+        panelInput.add(instructionLabel, gbc);
 
         // Top panel containing search and input panels
         JPanel topPanel = new JPanel(new BorderLayout());

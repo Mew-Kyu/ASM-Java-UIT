@@ -39,6 +39,7 @@ public class MauSacUI extends JFrame {
         setSize(500, 400);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setResizable(false); // Prevent window resizing/zooming
         initComponents();
         loadTable();
     }

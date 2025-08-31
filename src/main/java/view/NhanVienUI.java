@@ -78,36 +78,239 @@ public class NhanVienUI extends JFrame {
         
         JScrollPane scrollPane = new JScrollPane(table);
 
-        JPanel inputPanel = new JPanel(new GridLayout(4, 4));
-        inputPanel.setBorder(BorderFactory.createTitledBorder("Thông tin nhân viên"));
-        inputPanel.add(new JLabel("Mã NV:"));
+        JPanel inputPanel = new JPanel(new GridBagLayout());
+        inputPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+                "👥 Thông tin nhân viên",
+                javax.swing.border.TitledBorder.LEFT,
+                javax.swing.border.TitledBorder.TOP,
+                new Font("SansSerif", Font.BOLD, 14),
+                new Color(51, 102, 153)),
+            BorderFactory.createEmptyBorder(15, 20, 20, 20)
+        ));
+        inputPanel.setBackground(new Color(248, 249, 250));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Create styled labels with icons
+        JLabel lblId = new JLabel("🏷️ Mã nhân viên:");
+        lblId.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblId.setForeground(new Color(68, 68, 68));
+
+        JLabel lblHoTen = new JLabel("👤 Họ và tên:");
+        lblHoTen.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblHoTen.setForeground(new Color(68, 68, 68));
+
+        JLabel lblGioiTinh = new JLabel("⚧ Giới tính:");
+        lblGioiTinh.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblGioiTinh.setForeground(new Color(68, 68, 68));
+
+        JLabel lblNgaySinh = new JLabel("🎂 Ngày sinh:");
+        lblNgaySinh.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblNgaySinh.setForeground(new Color(68, 68, 68));
+
+        JLabel lblDienThoai = new JLabel("📞 Điện thoại:");
+        lblDienThoai.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblDienThoai.setForeground(new Color(68, 68, 68));
+
+        JLabel lblEmail = new JLabel("📧 Email:");
+        lblEmail.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblEmail.setForeground(new Color(68, 68, 68));
+
+        JLabel lblChucVu = new JLabel("💼 Chức vụ:");
+        lblChucVu.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblChucVu.setForeground(new Color(68, 68, 68));
+
+        JLabel lblTrangThai = new JLabel("✅ Trạng thái:");
+        lblTrangThai.setFont(new Font("SansSerif", Font.BOLD, 12));
+        lblTrangThai.setForeground(new Color(68, 68, 68));
+
+        // Style text fields
         txtId = new JTextField();
         txtId.setEnabled(false);
-        inputPanel.add(txtId);
-        inputPanel.add(new JLabel("Họ Tên:"));
+        txtId.setBackground(new Color(240, 240, 240));
+        txtId.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 200, 200)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtId.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        txtId.setPreferredSize(new Dimension(120, 30));
+
         txtHoTen = new JTextField();
-        inputPanel.add(txtHoTen);
-        inputPanel.add(new JLabel("Giới Tính:"));
+        txtHoTen.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(173, 216, 230)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtHoTen.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        txtHoTen.setToolTipText("Nhập họ và tên đầy đủ (bắt buộc)");
+        txtHoTen.setPreferredSize(new Dimension(180, 30));
+
+        txtDienThoai = new JTextField();
+        txtDienThoai.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(173, 216, 230)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtDienThoai.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        txtDienThoai.setToolTipText("Nhập số điện thoại (bắt buộc)");
+        txtDienThoai.setPreferredSize(new Dimension(140, 30));
+
+        txtEmail = new JTextField();
+        txtEmail.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(173, 216, 230)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtEmail.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        txtEmail.setToolTipText("Nhập địa chỉ email (bắt buộc)");
+        txtEmail.setPreferredSize(new Dimension(180, 30));
+
+        txtChucVu = new JTextField();
+        txtChucVu.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(173, 216, 230)),
+            BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+        txtChucVu.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        txtChucVu.setToolTipText("Nhập chức vụ (bắt buộc)");
+        txtChucVu.setPreferredSize(new Dimension(140, 30));
+
+        // Style combo box and other components
         cmbGioiTinh = new JComboBox<>(new String[]{"Nam", "Nữ", "Khác"});
-        cmbGioiTinh.setPreferredSize(new Dimension(150, 25));
-        inputPanel.add(cmbGioiTinh);
-        inputPanel.add(new JLabel("Ngày Sinh:"));
+        cmbGioiTinh.setBorder(null);
+        cmbGioiTinh.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        cmbGioiTinh.setBackground(Color.WHITE);
+        cmbGioiTinh.setToolTipText("Chọn giới tính");
+        cmbGioiTinh.setPreferredSize(new Dimension(120, 30));
+
         dateChooserNgaySinh = new JDateChooser();
         dateChooserNgaySinh.setDateFormatString("yyyy-MM-dd");
-        dateChooserNgaySinh.setPreferredSize(new Dimension(150, 25));
-        inputPanel.add(dateChooserNgaySinh);
-        inputPanel.add(new JLabel("Điện Thoại:"));
-        txtDienThoai = new JTextField();
-        inputPanel.add(txtDienThoai);
-        inputPanel.add(new JLabel("Email:"));
-        txtEmail = new JTextField();
-        inputPanel.add(txtEmail);
-        inputPanel.add(new JLabel("Chức Vụ:"));
-        txtChucVu = new JTextField();
-        inputPanel.add(txtChucVu);
-        inputPanel.add(new JLabel("Trạng Thái:"));
+        dateChooserNgaySinh.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(173, 216, 230)),
+            BorderFactory.createEmptyBorder(2, 5, 2, 5)
+        ));
+        dateChooserNgaySinh.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        dateChooserNgaySinh.setToolTipText("Chọn ngày sinh (bắt buộc)");
+        dateChooserNgaySinh.setPreferredSize(new Dimension(140, 30));
+
         chkTrangThai = new JCheckBox("Đang làm việc");
-        inputPanel.add(chkTrangThai);
+        chkTrangThai.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        chkTrangThai.setBackground(new Color(248, 249, 250));
+        chkTrangThai.setToolTipText("Tích để đánh dấu nhân viên đang làm việc");
+
+        // Row 1 - Mã NV và Họ tên
+        gbc.gridx = 0; gbc.gridy = 0;
+        gbc.gridwidth = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        inputPanel.add(lblId, gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.3;
+        inputPanel.add(txtId, gbc);
+
+        gbc.gridx = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        gbc.insets = new Insets(8, 20, 8, 8);
+        inputPanel.add(lblHoTen, gbc);
+
+        gbc.gridx = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.7;
+        gbc.insets = new Insets(8, 8, 8, 8);
+        inputPanel.add(txtHoTen, gbc);
+
+        // Row 2 - Giới tính và Ngày sinh
+        gbc.gridx = 0; gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        inputPanel.add(lblGioiTinh, gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.3;
+        inputPanel.add(cmbGioiTinh, gbc);
+
+        gbc.gridx = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        gbc.insets = new Insets(8, 20, 8, 8);
+        inputPanel.add(lblNgaySinh, gbc);
+
+        gbc.gridx = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.7;
+        gbc.insets = new Insets(8, 8, 8, 8);
+        inputPanel.add(dateChooserNgaySinh, gbc);
+
+        // Row 3 - Điện thoại và Email
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        inputPanel.add(lblDienThoai, gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.3;
+        inputPanel.add(txtDienThoai, gbc);
+
+        gbc.gridx = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        gbc.insets = new Insets(8, 20, 8, 8);
+        inputPanel.add(lblEmail, gbc);
+
+        gbc.gridx = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.7;
+        gbc.insets = new Insets(8, 8, 8, 8);
+        inputPanel.add(txtEmail, gbc);
+
+        // Row 4 - Chức vụ và Trạng thái
+        gbc.gridx = 0; gbc.gridy = 3;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        inputPanel.add(lblChucVu, gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.3;
+        inputPanel.add(txtChucVu, gbc);
+
+        gbc.gridx = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        gbc.insets = new Insets(8, 20, 8, 8);
+        inputPanel.add(lblTrangThai, gbc);
+
+        gbc.gridx = 3;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 0.7;
+        gbc.insets = new Insets(8, 8, 8, 8);
+        inputPanel.add(chkTrangThai, gbc);
+
+        // Add visual separation
+        gbc.gridx = 0; gbc.gridy = 4;
+        gbc.gridwidth = 4;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(15, 0, 10, 0);
+        gbc.weightx = 1.0;
+        JSeparator separator = new JSeparator();
+        separator.setBackground(new Color(220, 220, 220));
+        inputPanel.add(separator, gbc);
+
+        // Add instruction label
+        gbc.gridx = 0; gbc.gridy = 5;
+        gbc.gridwidth = 4;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets(5, 0, 10, 0);
+        gbc.weightx = 0;
+        JLabel instructionLabel = new JLabel("💡 Chọn một dòng trong bảng để chỉnh sửa hoặc nhập thông tin mới để thêm nhân viên");
+        instructionLabel.setFont(new Font("SansSerif", Font.ITALIC, 11));
+        instructionLabel.setForeground(new Color(102, 102, 102));
+        inputPanel.add(instructionLabel, gbc);
 
         // Top panel containing search and input panels
         JPanel topPanel = new JPanel(new BorderLayout());
@@ -158,7 +361,7 @@ public class NhanVienUI extends JFrame {
                     NhanVien nv = new NhanVien();
                     nv.setHoTen(txtHoTen.getText().trim());
                     nv.setGioiTinh((String) cmbGioiTinh.getSelectedItem());
-                    
+
                     // Convert Date to LocalDate
                     if (dateChooserNgaySinh.getDate() != null) {
                         java.util.Date selectedDate = dateChooserNgaySinh.getDate();
@@ -197,7 +400,7 @@ public class NhanVienUI extends JFrame {
                             LocalDate localDate = new java.sql.Date(selectedDate.getTime()).toLocalDate();
                             nv.setNgaySinh(localDate);
                         }
-                        
+
                         nv.setDienThoai(txtDienThoai.getText().trim());
                         nv.setEmail(txtEmail.getText().trim());
                         nv.setChucVu(txtChucVu.getText().trim());
@@ -239,11 +442,11 @@ public class NhanVienUI extends JFrame {
             if (row >= 0) {
                 txtId.setText(tableModel.getValueAt(row, 0).toString());
                 txtHoTen.setText(tableModel.getValueAt(row, 1).toString());
-                
+
                 // Set gender combobox
                 String gioiTinh = tableModel.getValueAt(row, 2).toString();
                 cmbGioiTinh.setSelectedItem(gioiTinh);
-                
+
                 // Set date picker
                 try {
                     String ngaySinhStr = tableModel.getValueAt(row, 3).toString();
@@ -253,11 +456,11 @@ public class NhanVienUI extends JFrame {
                 } catch (Exception ex) {
                     dateChooserNgaySinh.setDate(null);
                 }
-                
+
                 txtDienThoai.setText(tableModel.getValueAt(row, 4).toString());
                 txtEmail.setText(tableModel.getValueAt(row, 5).toString());
                 txtChucVu.setText(tableModel.getValueAt(row, 6).toString());
-                
+
                 // Convert text status back to boolean for checkbox
                 String trangThaiText = tableModel.getValueAt(row, 7).toString();
                 chkTrangThai.setSelected(parseTrangThai(trangThaiText));
@@ -323,14 +526,28 @@ public class NhanVienUI extends JFrame {
                 table.getColumnModel().getColumn(i).setMinWidth(130);
             }
         }
-        
+
         // Enable auto-resize mode and other table improvements
         table.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
-        
+
         // Improve table appearance
         table.setRowHeight(25);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getTableHeader().setReorderingAllowed(false); // Prevent column reordering
+    }
+
+    /**
+     * Gets actual text from field, ignoring placeholder text
+     */
+    private String getActualText(JTextField textField) {
+        return textField.getForeground().equals(Color.GRAY) ? "" : textField.getText().trim();
+    }
+
+    /**
+     * Checks if the field contains placeholder text
+     */
+    private boolean isPlaceholderText(JTextField textField, String placeholder) {
+        return textField.getText().equals(placeholder) || textField.getForeground().equals(Color.GRAY);
     }
 
     /**
@@ -339,7 +556,7 @@ public class NhanVienUI extends JFrame {
     private boolean isValidEmail(String email) {
         return email != null && EMAIL_PATTERN.matcher(email).matches();
     }
-    
+
     /**
      * Converts boolean status to meaningful Vietnamese text
      */
@@ -353,7 +570,7 @@ public class NhanVienUI extends JFrame {
     private boolean parseTrangThai(String trangThaiText) {
         return "Đang làm việc".equals(trangThaiText);
     }
-    
+
     /**
      * Validates all input fields
      */
@@ -364,13 +581,13 @@ public class NhanVienUI extends JFrame {
             txtHoTen.requestFocus();
             return false;
         }
-        
+
         if (dateChooserNgaySinh.getDate() == null) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn ngày sinh!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             dateChooserNgaySinh.requestFocus();
             return false;
         }
-        
+
         if (txtDienThoai.getText().trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập số điện thoại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             txtDienThoai.requestFocus();
@@ -382,11 +599,11 @@ public class NhanVienUI extends JFrame {
             txtEmail.requestFocus();
             return false;
         }
-        
+
         // Validate email format
         if (!isValidEmail(txtEmail.getText().trim())) {
-            JOptionPane.showMessageDialog(this, 
-                "Email không đúng định dạng!\nVí dụ: example@domain.com", 
+            JOptionPane.showMessageDialog(this,
+                "Email không đúng định dạng!\nVí dụ: example@domain.com",
                 "Lỗi", JOptionPane.ERROR_MESSAGE);
             txtEmail.requestFocus();
             return false;
@@ -434,3 +651,4 @@ public class NhanVienUI extends JFrame {
         SwingUtilities.invokeLater(() -> new NhanVienUI().setVisible(true));
     }
 }
+
