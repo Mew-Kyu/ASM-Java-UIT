@@ -67,36 +67,96 @@ public class BienTheSanPhamUI extends JFrame {
         rowSorter = new TableRowSorter<>(tableModel);
         table.setRowSorter(rowSorter);
 
-        // Form fields
+        // Form fields with enhanced user experience
         txtId = new JTextField();
         txtId.setEditable(false);
+        txtId.setBackground(new Color(245, 245, 245));
+        txtId.setToolTipText("Mã biến thể sẽ được tự động tạo");
+        txtId.setPreferredSize(new Dimension(120, 30));
+
         txtSoLuong = new JTextField();
-        txtSoLuong.setPreferredSize(new Dimension(60, 25));
+        txtSoLuong.setPreferredSize(new Dimension(120, 30));
+        txtSoLuong.setToolTipText("Nhập số lượng sản phẩm (VD: 100)");
+        txtSoLuong.setHorizontalAlignment(JTextField.RIGHT);
+
         txtGiaBan = new JTextField();
+        txtGiaBan.setPreferredSize(new Dimension(120, 30));
+        txtGiaBan.setToolTipText("Nhập giá bán (VD: 150000)");
+        txtGiaBan.setHorizontalAlignment(JTextField.RIGHT);
+
         txtSearchField = new JTextField(20);
+        txtSearchField.setToolTipText("Tìm kiếm theo tên sản phẩm, màu sắc, kích thước...");
+
         txtSelectedProduct = new JTextField();
         txtSelectedProduct.setEditable(false);
-        txtSelectedProduct.setPreferredSize(new Dimension(180, 25));
+        txtSelectedProduct.setPreferredSize(new Dimension(200, 30));
+        txtSelectedProduct.setBackground(new Color(250, 250, 250));
+        txtSelectedProduct.setToolTipText("Sản phẩm đã chọn - Nhấn nút 'Chọn Sản Phẩm' để thay đổi");
 
         cbMauSac = new JComboBox<>();
+        cbMauSac.setPreferredSize(new Dimension(120, 30));
+        cbMauSac.setToolTipText("Chọn màu sắc cho sản phẩm");
+
         cbKichThuoc = new JComboBox<>();
+        cbKichThuoc.setPreferredSize(new Dimension(120, 30));
+        cbKichThuoc.setToolTipText("Chọn kích thước cho sản phẩm");
 
         // Buttons with icons and enhanced functionality
-        btnAdd = new JButton("Thêm Sản Phẩm");
-        btnAdd.setPreferredSize(new Dimension(140, 30));
-        btnUpdate = new JButton("Cập Nhật");
-        btnUpdate.setPreferredSize(new Dimension(100, 30));
-        btnDelete = new JButton("Xóa");
-        btnDelete.setPreferredSize(new Dimension(80, 30));
-        btnRefresh = new JButton("Làm Mới");
-        btnRefresh.setPreferredSize(new Dimension(100, 30));
-        btnStockIn = new JButton("Nhập Kho");
-        btnStockIn.setPreferredSize(new Dimension(100, 30));
-        btnStockOut = new JButton("Xuất Kho");
-        btnStockOut.setPreferredSize(new Dimension(100, 30));
-        btnLowStock = new JButton("Hàng Sắp Hết");
-        btnLowStock.setPreferredSize(new Dimension(120, 30));
-        btnSelectProduct = new JButton("Chọn Sản Phẩm");
+        btnAdd = new JButton("📦 Thêm Sản Phẩm");
+        btnAdd.setPreferredSize(new Dimension(150, 35));
+        btnAdd.setBackground(new Color(76, 175, 80));
+        btnAdd.setForeground(Color.WHITE);
+        btnAdd.setFocusPainted(false);
+        btnAdd.setToolTipText("Thêm sản phẩm mới vào kho");
+
+        btnUpdate = new JButton("✏️ Cập Nhật");
+        btnUpdate.setPreferredSize(new Dimension(120, 35));
+        btnUpdate.setBackground(new Color(33, 150, 243));
+        btnUpdate.setForeground(Color.WHITE);
+        btnUpdate.setFocusPainted(false);
+        btnUpdate.setToolTipText("Cập nhật thông tin sản phẩm đã chọn");
+
+        btnDelete = new JButton("🗑️ Xóa");
+        btnDelete.setPreferredSize(new Dimension(100, 35));
+        btnDelete.setBackground(new Color(244, 67, 54));
+        btnDelete.setForeground(Color.WHITE);
+        btnDelete.setFocusPainted(false);
+        btnDelete.setToolTipText("Xóa sản phẩm khỏi kho");
+
+        btnRefresh = new JButton("🔄 Làm Mới");
+        btnRefresh.setPreferredSize(new Dimension(120, 35));
+        btnRefresh.setBackground(new Color(158, 158, 158));
+        btnRefresh.setForeground(Color.WHITE);
+        btnRefresh.setFocusPainted(false);
+        btnRefresh.setToolTipText("Làm mới danh sách và xóa form");
+
+        btnStockIn = new JButton("📥 Nhập Kho");
+        btnStockIn.setPreferredSize(new Dimension(120, 35));
+        btnStockIn.setBackground(new Color(139, 195, 74));
+        btnStockIn.setForeground(Color.WHITE);
+        btnStockIn.setFocusPainted(false);
+        btnStockIn.setToolTipText("Nhập thêm hàng vào kho");
+
+        btnStockOut = new JButton("📤 Xuất Kho");
+        btnStockOut.setPreferredSize(new Dimension(120, 35));
+        btnStockOut.setBackground(new Color(255, 152, 0));
+        btnStockOut.setForeground(Color.WHITE);
+        btnStockOut.setFocusPainted(false);
+        btnStockOut.setToolTipText("Xuất hàng khỏi kho");
+
+        btnLowStock = new JButton("⚠️ Hàng Sắp Hết");
+        btnLowStock.setPreferredSize(new Dimension(140, 30));
+        btnLowStock.setBackground(new Color(255, 193, 7));
+        btnLowStock.setForeground(Color.BLACK);
+        btnLowStock.setFocusPainted(false);
+        btnLowStock.setToolTipText("Xem danh sách hàng sắp hết");
+
+        btnSelectProduct = new JButton("📋 Chọn Sản Phẩm");
+        btnSelectProduct.setPreferredSize(new Dimension(140, 30));
+        btnSelectProduct.setBackground(new Color(103, 58, 183));
+        btnSelectProduct.setForeground(Color.WHITE);
+        btnSelectProduct.setFocusPainted(false);
+        btnSelectProduct.setToolTipText("Mở danh sách sản phẩm để chọn");
 
         // Statistics labels
         lblTotalItems = new JLabel("Tổng số mặt hàng: 0");

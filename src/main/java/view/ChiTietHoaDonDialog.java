@@ -20,7 +20,7 @@ public class ChiTietHoaDonDialog extends JDialog {
     private JTable table;
     private DefaultTableModel tableModel;
     private JLabel lblHoaDonInfo;
-    private JButton btnClose, btnDelete, btnRefresh, btnPrintPDF;
+    private JButton btnClose, btnDelete, btnRefresh, btnPrintPDF, btnAddProduct;
     private JFrame parentFrame;
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -101,31 +101,92 @@ public class ChiTietHoaDonDialog extends JDialog {
     }
 
     private JPanel createButtonPanel() {
-        JPanel panel = new JPanel(new FlowLayout());
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        btnDelete = new JButton("Xóa sản phẩm");
-        btnDelete.setIcon(new ImageIcon());
-        btnDelete.setPreferredSize(new Dimension(130, 30));
+        // Create buttons with basic colors and no icons
+        btnAddProduct = createStyledButton("Thêm sản phẩm", Color.WHITE, Color.BLACK, 160);
+        btnDelete = createStyledButton("Xóa sản phẩm", Color.LIGHT_GRAY, Color.BLACK, 150);
+        btnRefresh = createStyledButton("Làm mới", Color.GRAY, Color.WHITE, 120);
+        btnPrintPDF = createStyledButton("In PDF", Color.DARK_GRAY, Color.WHITE, 120);
+        btnClose = createStyledButton("Đóng", Color.BLACK, Color.WHITE, 100);
 
-        btnRefresh = new JButton("Làm mới");
-        btnRefresh.setIcon(new ImageIcon());
-        btnRefresh.setPreferredSize(new Dimension(100, 30));
-
-        btnPrintPDF = new JButton("In PDF");
-        btnPrintPDF.setIcon(new ImageIcon());
-        btnPrintPDF.setPreferredSize(new Dimension(100, 30));
-
-        btnClose = new JButton("Đóng");
-        btnClose.setIcon(new ImageIcon());
-        btnClose.setPreferredSize(new Dimension(80, 30));
-
+        // Add buttons to panel with proper spacing
+        panel.add(btnAddProduct);
+        panel.add(Box.createHorizontalStrut(10));
         panel.add(btnDelete);
+        panel.add(Box.createHorizontalStrut(15));
         panel.add(btnRefresh);
-        panel.add(Box.createHorizontalStrut(20));
+        panel.add(Box.createHorizontalStrut(10));
         panel.add(btnPrintPDF);
+        panel.add(Box.createHorizontalStrut(15));
         panel.add(btnClose);
 
         return panel;
+    }
+
+    // Helper method to create consistently styled buttons
+    private JButton createStyledButton(String text, Color backgroundColor, Color textColor, int width) {
+        JButton button = new JButton(text);
+        button.setPreferredSize(new Dimension(width, 35));
+        button.setFont(new Font("Arial", Font.PLAIN, 12));
+        button.setBackground(backgroundColor);
+        button.setForeground(textColor);
+        button.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Color.GRAY),
+            BorderFactory.createEmptyBorder(6, 12, 6, 12)
+        ));
+        button.setFocusPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Add simple hover effect
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            private Color originalBackground = backgroundColor;
+            private Color originalText = textColor;
+
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                if (backgroundColor == Color.WHITE) {
+                    button.setBackground(new Color(240, 240, 240));
+                } else if (backgroundColor == Color.LIGHT_GRAY) {
+                    button.setBackground(new Color(200, 200, 200));
+                } else if (backgroundColor == Color.GRAY) {
+                    button.setBackground(new Color(100, 100, 100));
+                } else if (backgroundColor == Color.DARK_GRAY) {
+                    button.setBackground(new Color(60, 60, 60));
+                } else if (backgroundColor == Color.BLACK) {
+                    button.setBackground(new Color(40, 40, 40));
+                }
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setBackground(originalBackground);
+                button.setForeground(originalText);
+            }
+
+            @Override
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                if (backgroundColor == Color.WHITE) {
+                    button.setBackground(new Color(220, 220, 220));
+                } else if (backgroundColor == Color.LIGHT_GRAY) {
+                    button.setBackground(new Color(180, 180, 180));
+                } else if (backgroundColor == Color.GRAY) {
+                    button.setBackground(new Color(80, 80, 80));
+                } else if (backgroundColor == Color.DARK_GRAY) {
+                    button.setBackground(new Color(40, 40, 40));
+                } else if (backgroundColor == Color.BLACK) {
+                    button.setBackground(new Color(20, 20, 20));
+                }
+            }
+
+            @Override
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                button.setBackground(originalBackground);
+            }
+        });
+
+        return button;
     }
 
     private void setupEventHandlers() {
@@ -133,6 +194,7 @@ public class ChiTietHoaDonDialog extends JDialog {
         btnRefresh.addActionListener(e -> loadData());
         btnDelete.addActionListener(e -> deleteChiTiet());
         btnPrintPDF.addActionListener(e -> printInvoiceToPDF());
+        btnAddProduct.addActionListener(e -> addProductToInvoice());
 
         // Double-click to edit quantity
         table.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -349,6 +411,24 @@ public class ChiTietHoaDonDialog extends JDialog {
 
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Lỗi khi tạo PDF: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void addProductToInvoice() {
+        try {
+            // Open product selection dialog
+            ThemSanPhamDialog dialog = new ThemSanPhamDialog(this, hoaDon);
+            dialog.setVisible(true);
+
+            // Refresh the invoice object from database to get updated details
+            hoaDon = hoaDonController.getHoaDonByIdWithDetails(hoaDon.getId());
+
+            // Refresh the data in the table and update the invoice info
+            loadData();
+            refreshParentWindow();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi thêm sản phẩm: " + ex.getMessage());
         }
     }
 

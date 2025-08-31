@@ -39,6 +39,21 @@ public class ThemSanPhamDialog extends JDialog {
         setLocationRelativeTo(parent);
     }
 
+    // Overloaded constructor to accept JDialog as parent
+    public ThemSanPhamDialog(JDialog parent, HoaDon hoaDon) {
+        super(parent, "Thêm Sản Phẩm Vào Hóa Đơn #" + hoaDon.getId(), true);
+        this.hoaDon = hoaDon;
+        this.bienTheController = new BienTheSanPhamController();
+        this.chiTietController = new ChiTietHoaDonController();
+        this.hoaDonController = new HoaDonController();
+
+        initComponents();
+        loadData();
+
+        setSize(900, 600);
+        setLocationRelativeTo(parent);
+    }
+
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
 
