@@ -85,7 +85,7 @@ public class BienTheSanPhamUI extends JFrame {
         txtGiaBan.setHorizontalAlignment(JTextField.RIGHT);
 
         txtSearchField = new JTextField(20);
-        txtSearchField.setToolTipText("Tìm kiếm theo tên sản ph���m, màu sắc, kích thước...");
+        txtSearchField.setToolTipText("Tìm kiếm theo tên sản phẩm, màu sắc, kích thước...");
 
         txtSelectedProduct = new JTextField();
         txtSelectedProduct.setEditable(false);
@@ -270,7 +270,7 @@ public class BienTheSanPhamUI extends JFrame {
         cbMauSac.setFont(new Font("SansSerif", Font.PLAIN, 12));
         cbMauSac.setBackground(Color.WHITE);
 
-        // Row 1 - Mã biến thể và S���n phẩm
+        // Row 1 - Mã biến thể và Sản phẩm
         gbc.gridx = 0; gbc.gridy = 0;
         gbc.gridwidth = 1;
         gbc.weightx = 0;

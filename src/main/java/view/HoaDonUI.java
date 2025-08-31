@@ -1147,7 +1147,7 @@ public class HoaDonUI extends JFrame {
             }
 
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "M�� hóa đơn không hợp lệ!");
+            JOptionPane.showMessageDialog(this, "Mã hóa đơn không hợp lệ!");
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
         }
