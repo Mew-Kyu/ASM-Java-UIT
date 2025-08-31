@@ -4,6 +4,7 @@ import model.PhieuDoiTra;
 import dao.impl.PhieuDoiTraDAO;
 import service.impl.PhieuDoiTraServiceImpl;
 import service.interfaces.IPhieuDoiTraService;
+import util.DateUtils;
 import util.RoleManager;
 import util.SessionManager;
 import exception.BusinessException;
@@ -255,7 +256,7 @@ public class PhieuDoiTraUI extends JFrame {
                 phieu.getMaPhieuDT(),
                 phieu.getMaHD(),
                 phieu.getLoaiPhieu().equals("DOI") ? "Đổi" : "Trả",
-                phieu.getNgayTao(),
+                DateUtils.formatDate(phieu.getNgayTao()),
                 phieu.getTenKhachHang() != null ? phieu.getTenKhachHang() : "Khách lẻ",
                 phieu.getLyDo().length() > 30 ? phieu.getLyDo().substring(0, 30) + "..." : phieu.getLyDo(),
                 getTrangThaiText(phieu.getTrangThai()),

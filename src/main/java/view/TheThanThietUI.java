@@ -7,6 +7,7 @@ import dao.impl.TheThanThietDAO;
 import dao.impl.LichSuDiemDAO;
 import dao.impl.KhachHangDAO;
 import util.RoleManager;
+import util.DateUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -89,7 +90,7 @@ public class TheThanThietUI extends JFrame {
                     the.getLoaiThe(),
                     the.getDiemTichLuy(),
                     the.getTrangThai(),
-                    the.getNgayTao()
+                    DateUtils.formatDate(the.getNgayTao())
                 });
             }
         } catch (Exception e) {

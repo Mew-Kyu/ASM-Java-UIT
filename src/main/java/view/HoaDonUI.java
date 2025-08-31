@@ -22,12 +22,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.io.File;
 import util.PDFInvoiceGenerator;
+import com.toedter.calendar.JDateChooser; // Added for date picker
+import java.util.Date; // for JDateChooser value
+import java.time.ZoneId; // for conversion to LocalDate
 
 public class HoaDonUI extends JFrame {
-    private JTextField txtMaHD, txtNgayLap, txtTongTien, txtSelectedEmployee, txtSelectedCustomer, txtCustomerName;
-    // Search fields
+    private JTextField txtMaHD, txtTongTien, txtSelectedEmployee, txtSelectedCustomer, txtCustomerName;
+    // Date choosers replacing text fields
+    private JDateChooser txtNgayLap;
+    private JDateChooser txtSearchFromDate, txtSearchToDate;
+    // Search fields (non-date)
     private JTextField txtSearchMaHD, txtSearchCustomer, txtSearchEmployee;
-    private JTextField txtSearchFromDate, txtSearchToDate;
     private JComboBox<String> cboSearchPaymentStatus;
     private JButton btnSearch, btnClearSearch;
     private JButton btnSelectEmployee, btnSelectCustomer;
@@ -143,16 +148,18 @@ public class HoaDonUI extends JFrame {
         gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 1;
         panel.add(new JLabel("Từ ngày:"), gbc);
         gbc.gridx = 1; gbc.gridwidth = 2;
-        txtSearchFromDate = new JTextField(15);
-        txtSearchFromDate.setToolTipText("dd/MM/yyyy");
+        txtSearchFromDate = new JDateChooser();
+        txtSearchFromDate.setDateFormatString("dd/MM/yyyy");
+        txtSearchFromDate.setPreferredSize(new Dimension(150, 25));
         panel.add(txtSearchFromDate, gbc);
 
         // Row 5 - To Date
         gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 1;
         panel.add(new JLabel("Đến ngày:"), gbc);
         gbc.gridx = 1; gbc.gridwidth = 2;
-        txtSearchToDate = new JTextField(15);
-        txtSearchToDate.setToolTipText("dd/MM/yyyy");
+        txtSearchToDate = new JDateChooser();
+        txtSearchToDate.setDateFormatString("dd/MM/yyyy");
+        txtSearchToDate.setPreferredSize(new Dimension(150, 25));
         panel.add(txtSearchToDate, gbc);
 
         // Row 6 - Payment Status
@@ -194,8 +201,10 @@ public class HoaDonUI extends JFrame {
         gbc.gridx = 2; gbc.fill = GridBagConstraints.NONE;
         panel.add(new JLabel("Ngày lập:"), gbc);
         gbc.gridx = 3; gbc.fill = GridBagConstraints.HORIZONTAL;
-        txtNgayLap = new JTextField(10);
-        txtNgayLap.setText(LocalDate.now().format(dateFormatter));
+        txtNgayLap = new JDateChooser();
+        txtNgayLap.setDateFormatString("dd/MM/yyyy");
+        txtNgayLap.setDate(java.sql.Date.valueOf(LocalDate.now()));
+        txtNgayLap.setPreferredSize(new Dimension(120, 25));
         panel.add(txtNgayLap, gbc);
 
         // Row 2 - Customer selection
@@ -489,8 +498,8 @@ public class HoaDonUI extends JFrame {
             String maHD = txtSearchMaHD.getText().trim();
             String khachHang = txtSearchCustomer.getText().trim();
             String nhanVien = txtSearchEmployee.getText().trim();
-            String fromDate = txtSearchFromDate.getText().trim();
-            String toDate = txtSearchToDate.getText().trim();
+            LocalDate startDate = getLocalDateFromChooser(txtSearchFromDate);
+            LocalDate endDate = getLocalDateFromChooser(txtSearchToDate);
             String trangThai = (String) cboSearchPaymentStatus.getSelectedItem();
 
             // Convert "Tất cả" to null for search
@@ -499,17 +508,6 @@ public class HoaDonUI extends JFrame {
             } else if (trangThai != null) {
                 // Convert display value to database value
                 trangThai = DISPLAY_TO_DB.get(trangThai);
-            }
-
-            LocalDate startDate = null;
-            LocalDate endDate = null;
-
-            if (!fromDate.isEmpty()) {
-                startDate = parseDate(fromDate);
-            }
-
-            if (!toDate.isEmpty()) {
-                endDate = parseDate(toDate);
             }
 
             // Perform search using the existing table data for client-side filtering
@@ -579,8 +577,6 @@ public class HoaDonUI extends JFrame {
 
             JOptionPane.showMessageDialog(this, "Tìm thấy " + resultCount + " kết quả phù hợp.");
 
-        } catch (DateTimeParseException ex) {
-            JOptionPane.showMessageDialog(this, "Định dạng ngày không hợp lệ! Vui lòng sử dụng dd/MM/yyyy", "Lỗi", JOptionPane.ERROR_MESSAGE);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi tìm kiếm: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
@@ -590,8 +586,8 @@ public class HoaDonUI extends JFrame {
         txtSearchMaHD.setText("");
         txtSearchCustomer.setText("");
         txtSearchEmployee.setText("");
-        txtSearchFromDate.setText("");
-        txtSearchToDate.setText("");
+        txtSearchFromDate.setDate(null);
+        txtSearchToDate.setDate(null);
         cboSearchPaymentStatus.setSelectedIndex(0);
     }
 
@@ -619,7 +615,11 @@ public class HoaDonUI extends JFrame {
 
     private void addHoaDon() {
         try {
-            LocalDate ngayLap = parseDate(txtNgayLap.getText().trim());
+            LocalDate ngayLap = getLocalDateFromChooser(txtNgayLap);
+            if (ngayLap == null) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn ngày lập!");
+                return;
+            }
 
             if (selectedEmployee == null) {
                 JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên!");
@@ -632,8 +632,6 @@ public class HoaDonUI extends JFrame {
             JOptionPane.showMessageDialog(this, "Thêm hóa đơn thành công!");
             loadHoaDonTable();
 
-        } catch (DateTimeParseException ex) {
-            JOptionPane.showMessageDialog(this, "Ngày lập không hợp lệ! Định dạng: dd/MM/yyyy");
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
         }
@@ -667,7 +665,11 @@ public class HoaDonUI extends JFrame {
                 hd.setTrangThaiThanhToan(dbValue != null ? dbValue : selectedPaymentStatus);
             }
 
-            LocalDate ngayLap = parseDate(txtNgayLap.getText().trim());
+            LocalDate ngayLap = getLocalDateFromChooser(txtNgayLap);
+            if (ngayLap == null) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn ngày lập!");
+                return;
+            }
 
             if (selectedEmployee == null) {
                 JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên!");
@@ -686,8 +688,6 @@ public class HoaDonUI extends JFrame {
 
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Mã hóa đơn không hợp lệ!");
-        } catch (DateTimeParseException ex) {
-            JOptionPane.showMessageDialog(this, "Ngày lập không hợp lệ! Định dạng: dd/MM/yyyy");
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
         }
@@ -784,7 +784,7 @@ public class HoaDonUI extends JFrame {
 
     private void clearFields() {
         txtMaHD.setText("");
-        txtNgayLap.setText(LocalDate.now().format(dateFormatter));
+        txtNgayLap.setDate(java.sql.Date.valueOf(LocalDate.now()));
         txtTongTien.setText("");
         selectedCustomer = null;
         txtSelectedCustomer.setText("Khách lẻ");
@@ -818,7 +818,7 @@ public class HoaDonUI extends JFrame {
 
                 if (hd != null) {
                     txtMaHD.setText(String.valueOf(hd.getId()));
-                    txtNgayLap.setText(hd.getNgayLap().format(dateFormatter));
+                    txtNgayLap.setDate(java.sql.Date.valueOf(hd.getNgayLap()));
                     txtTongTien.setText(String.format("%,.0f VNĐ", hd.getTongTien()));
 
                     selectedCustomer = hd.getMaKH();
@@ -871,8 +871,10 @@ public class HoaDonUI extends JFrame {
         }
     }
 
-    private LocalDate parseDate(String dateStr) throws DateTimeParseException {
-        return LocalDate.parse(dateStr, dateFormatter);
+    private LocalDate getLocalDateFromChooser(JDateChooser chooser) {
+        Date date = chooser.getDate();
+        if (date == null) return null;
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 
     private void printInvoiceToPDF() {

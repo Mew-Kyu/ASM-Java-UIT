@@ -19,6 +19,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.math.BigDecimal;
 import java.util.List;
+import com.toedter.calendar.JDateChooser; // Added for date picker
+import java.util.Date; // for JDateChooser value
+import java.time.ZoneId; // for conversion to LocalDate
 
 /**
  * UI for Reports & Analytics Management
@@ -29,11 +32,11 @@ public class BaoCaoUI extends BaseAuthenticatedUI {
     private JTabbedPane tabbedPane;
     
     // Revenue report components
-    private JTextField txtTuNgay, txtDenNgay;
+    private JDateChooser txtTuNgay, txtDenNgay;
     private JTextArea txtBaoCaoDoanhThu;
     
     // Product report components
-    private JTextField txtTuNgaySeProduct, txtDenNgayProduct;
+    private JDateChooser txtTuNgaySeProduct, txtDenNgayProduct;
     private JTable tblTopSanPham;
     private DefaultTableModel topSanPhamModel;
     
@@ -43,7 +46,7 @@ public class BaoCaoUI extends BaseAuthenticatedUI {
     private JLabel lblTongGiaTriTonKho, lblTongSoLuongTonKho;
     
     // Employee report components
-    private JTextField txtTuNgayNhanVien, txtDenNgayNhanVien;
+    private JDateChooser txtTuNgayNhanVien, txtDenNgayNhanVien;
     private JTable tblHieuSuatNhanVien;
     private DefaultTableModel hieuSuatNhanVienModel;
     
@@ -94,13 +97,17 @@ public class BaoCaoUI extends BaseAuthenticatedUI {
         // Control panel
         JPanel controlPanel = new JPanel(new FlowLayout());
         controlPanel.add(new JLabel("Từ ngày:"));
-        txtTuNgay = new JTextField(10);
-        txtTuNgay.setText("2025-07-24");
+        txtTuNgay = new JDateChooser();
+        txtTuNgay.setDateFormatString("yyyy-MM-dd");
+        txtTuNgay.setDate(java.sql.Date.valueOf(LocalDate.of(2025, 7, 24)));
+        txtTuNgay.setPreferredSize(new Dimension(120, 25));
         controlPanel.add(txtTuNgay);
         
         controlPanel.add(new JLabel("Đến ngày:"));
-        txtDenNgay = new JTextField(10);
-        txtDenNgay.setText("2025-08-23");
+        txtDenNgay = new JDateChooser();
+        txtDenNgay.setDateFormatString("yyyy-MM-dd");
+        txtDenNgay.setDate(java.sql.Date.valueOf(LocalDate.of(2025, 8, 23)));
+        txtDenNgay.setPreferredSize(new Dimension(120, 25));
         controlPanel.add(txtDenNgay);
         
         JButton btnTaoBaoCao = new JButton("Tạo Báo Cáo");
@@ -125,13 +132,17 @@ public class BaoCaoUI extends BaseAuthenticatedUI {
         // Control panel
         JPanel controlPanel = new JPanel(new FlowLayout());
         controlPanel.add(new JLabel("Từ ngày:"));
-        txtTuNgaySeProduct = new JTextField(10);
-        txtTuNgaySeProduct.setText(LocalDate.now().minusDays(30).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        txtTuNgaySeProduct = new JDateChooser();
+        txtTuNgaySeProduct.setDateFormatString("yyyy-MM-dd");
+        txtTuNgaySeProduct.setDate(java.sql.Date.valueOf(LocalDate.now().minusDays(30)));
+        txtTuNgaySeProduct.setPreferredSize(new Dimension(120, 25));
         controlPanel.add(txtTuNgaySeProduct);
         
         controlPanel.add(new JLabel("Đến ngày:"));
-        txtDenNgayProduct = new JTextField(10);
-        txtDenNgayProduct.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        txtDenNgayProduct = new JDateChooser();
+        txtDenNgayProduct.setDateFormatString("yyyy-MM-dd");
+        txtDenNgayProduct.setDate(java.sql.Date.valueOf(LocalDate.now()));
+        txtDenNgayProduct.setPreferredSize(new Dimension(120, 25));
         controlPanel.add(txtDenNgayProduct);
         
         JButton btnTopSanPham = new JButton("Top Sản Phẩm Bán Chạy");
@@ -192,13 +203,17 @@ public class BaoCaoUI extends BaseAuthenticatedUI {
         // Control panel
         JPanel controlPanel = new JPanel(new FlowLayout());
         controlPanel.add(new JLabel("Từ ngày:"));
-        txtTuNgayNhanVien = new JTextField(10);
-        txtTuNgayNhanVien.setText(LocalDate.now().minusDays(30).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        txtTuNgayNhanVien = new JDateChooser();
+        txtTuNgayNhanVien.setDateFormatString("yyyy-MM-dd");
+        txtTuNgayNhanVien.setDate(java.sql.Date.valueOf(LocalDate.now().minusDays(30)));
+        txtTuNgayNhanVien.setPreferredSize(new Dimension(120, 25));
         controlPanel.add(txtTuNgayNhanVien);
         
         controlPanel.add(new JLabel("Đến ngày:"));
-        txtDenNgayNhanVien = new JTextField(10);
-        txtDenNgayNhanVien.setText(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+        txtDenNgayNhanVien = new JDateChooser();
+        txtDenNgayNhanVien.setDateFormatString("yyyy-MM-dd");
+        txtDenNgayNhanVien.setDate(java.sql.Date.valueOf(LocalDate.now()));
+        txtDenNgayNhanVien.setPreferredSize(new Dimension(120, 25));
         controlPanel.add(txtDenNgayNhanVien);
         
         JButton btnHieuSuat = new JButton("Xem Hiệu Suất");
@@ -219,9 +234,14 @@ public class BaoCaoUI extends BaseAuthenticatedUI {
     
     private void taoBaoCaoDoanhThu(ActionEvent e) {
         try {
-            LocalDate tuNgay = LocalDate.parse(txtTuNgay.getText());
-            LocalDate denNgay = LocalDate.parse(txtDenNgay.getText());
-            
+            LocalDate tuNgay = getLocalDateFromChooser(txtTuNgay);
+            LocalDate denNgay = getLocalDateFromChooser(txtDenNgay);
+
+            if (tuNgay == null || denNgay == null) {
+                showError("Vui lòng chọn cả ngày bắt đầu và ngày kết thúc!");
+                return;
+            }
+
             String baoCao = baoCaoService.taoBaoCaoDoanhThu(tuNgay, denNgay, "NGAY");
             txtBaoCaoDoanhThu.setText(baoCao);
             
@@ -232,9 +252,14 @@ public class BaoCaoUI extends BaseAuthenticatedUI {
     
     private void loadTopSanPhamBanChay(ActionEvent e) {
         try {
-            LocalDate tuNgay = LocalDate.parse(txtTuNgaySeProduct.getText());
-            LocalDate denNgay = LocalDate.parse(txtDenNgayProduct.getText());
-            
+            LocalDate tuNgay = getLocalDateFromChooser(txtTuNgaySeProduct);
+            LocalDate denNgay = getLocalDateFromChooser(txtDenNgayProduct);
+
+            if (tuNgay == null || denNgay == null) {
+                showError("Vui lòng chọn cả ngày bắt đầu và ngày kết thúc!");
+                return;
+            }
+
             List<ThongKeSanPham> data = baoCaoService.layTopSanPhamBanChay(tuNgay, denNgay, 20);
             
             topSanPhamModel.setRowCount(0);
@@ -307,9 +332,14 @@ public class BaoCaoUI extends BaseAuthenticatedUI {
     
     private void loadHieuSuatNhanVien(ActionEvent e) {
         try {
-            LocalDate tuNgay = LocalDate.parse(txtTuNgayNhanVien.getText());
-            LocalDate denNgay = LocalDate.parse(txtDenNgayNhanVien.getText());
-            
+            LocalDate tuNgay = getLocalDateFromChooser(txtTuNgayNhanVien);
+            LocalDate denNgay = getLocalDateFromChooser(txtDenNgayNhanVien);
+
+            if (tuNgay == null || denNgay == null) {
+                showError("Vui lòng chọn cả ngày bắt đầu và ngày kết thúc!");
+                return;
+            }
+
             List<Object[]> data = baoCaoService.thongKeHieuSuatNhanVien(tuNgay, denNgay);
             
             hieuSuatNhanVienModel.setRowCount(0);
@@ -366,6 +396,12 @@ public class BaoCaoUI extends BaseAuthenticatedUI {
         });
     }
     
+    private LocalDate getLocalDateFromChooser(JDateChooser chooser) {
+        Date date = chooser.getDate();
+        if (date == null) return null;
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    }
+
     private String formatCurrency(BigDecimal amount) {
         if (amount == null) return "0 VNĐ";
         return String.format("%,.0f VNĐ", amount);
