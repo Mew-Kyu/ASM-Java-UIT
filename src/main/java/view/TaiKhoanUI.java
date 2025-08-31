@@ -22,8 +22,12 @@ public class TaiKhoanUI extends JFrame {
     private JComboBox<String> cmbQuyen;
     private JPasswordField txtMatKhau;
     private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnClear;
+    // Add search components
+    private JTextField txtSearch;
+    private JButton btnSearch, btnClearSearch;
     private String selectedUsername = null;
     private boolean isUpdating = false;
+    private List<TaiKhoan> allAccounts; // Store all accounts for filtering
 
     public TaiKhoanUI() {
         // Check authentication and authorization
@@ -60,7 +64,27 @@ public class TaiKhoanUI extends JFrame {
     private void initComponents() {
         JPanel panel = new JPanel(new BorderLayout());
 
-        // Table
+        // Search panel
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.setBorder(BorderFactory.createTitledBorder("Tìm kiếm"));
+
+        searchPanel.add(new JLabel("Tìm kiếm:"));
+        txtSearch = new JTextField(20);
+        txtSearch.setToolTipText("Tìm theo tên đăng nhập, mã NV hoặc quyền");
+        searchPanel.add(txtSearch);
+
+        btnSearch = new JButton("Tìm");
+        btnSearch.setPreferredSize(new Dimension(70, 25));
+        searchPanel.add(btnSearch);
+
+        btnClearSearch = new JButton("Xóa");
+        btnClearSearch.setPreferredSize(new Dimension(70, 25));
+        searchPanel.add(btnClearSearch);
+
+        panel.add(searchPanel, BorderLayout.NORTH);
+
+        // Table panel
+        JPanel tablePanel = new JPanel(new BorderLayout());
         tableModel = new DefaultTableModel(new Object[]{"Tên Đăng Nhập", "Mã NV", "Quyền"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -70,8 +94,9 @@ public class TaiKhoanUI extends JFrame {
         table = new JTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setPreferredSize(new Dimension(0, 250));
-        panel.add(scrollPane, BorderLayout.CENTER);
+        scrollPane.setPreferredSize(new Dimension(0, 200));
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(tablePanel, BorderLayout.CENTER);
 
         // Form panel
         JPanel formPanel = new JPanel(new GridBagLayout());
@@ -80,35 +105,56 @@ public class TaiKhoanUI extends JFrame {
         gbc.insets = new Insets(5, 5, 5, 5);
 
         // Username
-        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
         formPanel.add(new JLabel("Tên Đăng Nhập:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         txtTenDangNhap = new JTextField(20);
         formPanel.add(txtTenDangNhap, gbc);
 
         // Password
-        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
         formPanel.add(new JLabel("Mật Khẩu:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         txtMatKhau = new JPasswordField(20);
         txtMatKhau.setToolTipText("Để trống nếu không muốn thay đổi mật khẩu (khi cập nhật)");
         formPanel.add(txtMatKhau, gbc);
 
         // Employee ID
-        gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
         formPanel.add(new JLabel("Mã NV:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         txtMaNV = new JTextField(20);
         formPanel.add(txtMaNV, gbc);
 
         // Role
-        gbc.gridx = 0; gbc.gridy = 3; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
         formPanel.add(new JLabel("Quyền:"), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
         cmbQuyen = new JComboBox<>(new String[]{"ADMIN", "MANAGER", "STAFF"});
         formPanel.add(cmbQuyen, gbc);
 
-        panel.add(formPanel, BorderLayout.NORTH);
+        // Create a container for form and buttons
+        JPanel southPanel = new JPanel(new BorderLayout());
+        southPanel.add(formPanel, BorderLayout.CENTER);
 
         // Buttons panel
         JPanel buttonPanel = new JPanel(new FlowLayout());
@@ -128,7 +174,9 @@ public class TaiKhoanUI extends JFrame {
         buttonPanel.add(btnDelete);
         buttonPanel.add(btnRefresh);
         buttonPanel.add(btnClear);
-        panel.add(buttonPanel, BorderLayout.SOUTH);
+        southPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        panel.add(southPanel, BorderLayout.SOUTH);
 
         add(panel);
 
@@ -168,6 +216,26 @@ public class TaiKhoanUI extends JFrame {
             }
         });
 
+        // Add search handlers
+        btnSearch.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                performSearch();
+            }
+        });
+
+        btnClearSearch.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                clearSearch();
+            }
+        });
+
+        // Allow Enter key to trigger search
+        txtSearch.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                performSearch();
+            }
+        });
+
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int row = table.getSelectedRow();
@@ -183,6 +251,56 @@ public class TaiKhoanUI extends JFrame {
                 }
             }
         });
+    }
+
+    // Add search methods
+    private void performSearch() {
+        String searchText = txtSearch.getText().trim().toLowerCase();
+        if (searchText.isEmpty()) {
+            loadTable(); // Show all records if search is empty
+            return;
+        }
+
+        tableModel.setRowCount(0);
+        try {
+            if (allAccounts == null) {
+                allAccounts = controller.getAllTaiKhoan();
+            }
+
+            for (TaiKhoan tk : allAccounts) {
+                String username = tk.getTenDangNhap().toLowerCase();
+                String employeeId = tk.getMaNV() != null ? tk.getMaNV().getId().toString() : "";
+                String role = tk.getQuyen().toLowerCase();
+
+                // Check if any field contains the search text
+                if (username.contains(searchText) ||
+                        employeeId.contains(searchText) ||
+                        role.contains(searchText)) {
+
+                    tableModel.addRow(new Object[]{
+                            tk.getTenDangNhap(),
+                            tk.getMaNV() != null ? tk.getMaNV().getId() : "N/A",
+                            tk.getQuyen()
+                    });
+                }
+            }
+
+            if (tableModel.getRowCount() == 0) {
+                JOptionPane.showMessageDialog(this,
+                        "Không tìm thấy tài khoản nào phù hợp với từ khóa: " + txtSearch.getText(),
+                        "Kết quả tìm kiếm",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi tìm kiếm: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void clearSearch() {
+        txtSearch.setText("");
+        loadTable(); // Reload all data
+        clearForm();
     }
 
     private void addTaiKhoan() {
@@ -299,11 +417,11 @@ public class TaiKhoanUI extends JFrame {
     private void loadTable() {
         tableModel.setRowCount(0);
         try {
-            List<TaiKhoan> accounts = controller.getAllTaiKhoan();
-            for (TaiKhoan tk : accounts) {
+            allAccounts = controller.getAllTaiKhoan(); // Store for search functionality
+            for (TaiKhoan tk : allAccounts) {
                 tableModel.addRow(new Object[]{
                         tk.getTenDangNhap(),
-                        tk.getMaNV() != null ? tk.getMaNV().getId(): "N/A",
+                        tk.getMaNV() != null ? tk.getMaNV().getId() : "N/A",
                         tk.getQuyen()
                 });
             }

@@ -26,4 +26,11 @@ public class KhachHangController {
     public void xoaKhachHang(int id) {
         khachHangDAO.delete(id);
     }
+
+    public List<KhachHang> timKiemKhachHang(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return layDanhSachKhachHang();
+        }
+        return khachHangDAO.searchByKeyword(keyword.trim());
+    }
 }

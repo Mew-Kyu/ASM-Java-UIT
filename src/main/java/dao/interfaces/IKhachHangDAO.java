@@ -9,4 +9,5 @@ public interface IKhachHangDAO {
     void delete(int maKH);
     KhachHang findById(int maKH);
     List<KhachHang> findAll();
+    List<KhachHang> searchByKeyword(String keyword);
 }

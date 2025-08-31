@@ -34,4 +34,15 @@ public class NhanVienController {
     public NhanVien getNhanVienById(int id) {
         return dao.findById(id);
     }
+
+    public List<NhanVien> timKiemNhanVien(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return getAllNhanVien();
+        }
+        return dao.searchByKeyword(keyword.trim());
+    }
+
+    public List<NhanVien> searchNhanVien(String keyword) {
+        return timKiemNhanVien(keyword);
+    }
 }

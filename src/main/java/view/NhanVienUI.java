@@ -8,6 +8,10 @@ import util.RoleManager;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -18,11 +22,12 @@ public class NhanVienUI extends JFrame {
     private JTable table;
     private DefaultTableModel tableModel;
     private JTextField txtId, txtHoTen, txtDienThoai, txtEmail, txtChucVu;
+    private JTextField txtTimKiem;
     private JComboBox<String> cmbGioiTinh;
     private JDateChooser dateChooserNgaySinh;
     private JCheckBox chkTrangThai;
-    private JButton btnAdd, btnUpdate, btnDelete, btnRefresh;
-    
+    private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnTimKiem;
+
     // Email validation pattern
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
         "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$"
@@ -45,7 +50,7 @@ public class NhanVienUI extends JFrame {
 
         controller = new NhanVienController();
         setTitle("Quản Lý Nhân Viên - " + SessionManager.getInstance().getCurrentUsername());
-        setSize(800, 500);
+        setSize(800, 550);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         initComponents();
@@ -54,6 +59,17 @@ public class NhanVienUI extends JFrame {
 
     private void initComponents() {
         JPanel panel = new JPanel(new BorderLayout());
+
+        // Search panel
+        JPanel panelSearch = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelSearch.setBorder(BorderFactory.createTitledBorder("Tìm kiếm nhân viên"));
+        panelSearch.add(new JLabel("Từ khóa:"));
+        txtTimKiem = new JTextField(20);
+        panelSearch.add(txtTimKiem);
+        btnTimKiem = new JButton("Tìm kiếm");
+        btnTimKiem.setPreferredSize(new Dimension(90, 25));
+        panelSearch.add(btnTimKiem);
+
         tableModel = new DefaultTableModel(new Object[]{"Mã NV", "Họ Tên", "Giới Tính", "Ngày Sinh", "Điện Thoại", "Email", "Chức Vụ", "Trạng Thái"}, 0);
         table = new JTable(tableModel);
         
@@ -61,9 +77,9 @@ public class NhanVienUI extends JFrame {
         setupColumnWidths();
         
         JScrollPane scrollPane = new JScrollPane(table);
-        panel.add(scrollPane, BorderLayout.CENTER);
 
         JPanel inputPanel = new JPanel(new GridLayout(4, 4));
+        inputPanel.setBorder(BorderFactory.createTitledBorder("Thông tin nhân viên"));
         inputPanel.add(new JLabel("Mã NV:"));
         txtId = new JTextField();
         txtId.setEnabled(false);
@@ -92,7 +108,14 @@ public class NhanVienUI extends JFrame {
         inputPanel.add(new JLabel("Trạng Thái:"));
         chkTrangThai = new JCheckBox("Đang làm việc");
         inputPanel.add(chkTrangThai);
-        panel.add(inputPanel, BorderLayout.NORTH);
+
+        // Top panel containing search and input panels
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(panelSearch, BorderLayout.NORTH);
+        topPanel.add(inputPanel, BorderLayout.CENTER);
+
+        panel.add(topPanel, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
         btnAdd = new JButton("Thêm");
@@ -110,6 +133,24 @@ public class NhanVienUI extends JFrame {
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         add(panel);
+
+        // Search functionality - only when button is clicked or Enter key pressed
+        btnTimKiem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                performSearch();
+            }
+        });
+
+        // Allow Enter key to trigger search
+        txtTimKiem.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    performSearch();
+                }
+            }
+        });
 
         btnAdd.addActionListener(e -> {
             if (validateInput()) {
@@ -188,8 +229,9 @@ public class NhanVienUI extends JFrame {
         });
 
         btnRefresh.addActionListener(e -> {
-            loadTable();
             clearInput();
+            txtTimKiem.setText(""); // Clear search field
+            loadTable(); // Reload all data
         });
 
         table.getSelectionModel().addListSelectionListener(e -> {
@@ -228,8 +270,8 @@ public class NhanVienUI extends JFrame {
         List<NhanVien> list = controller.getAllNhanVien();
         for (NhanVien nv : list) {
             tableModel.addRow(new Object[]{
-                nv.getId(), 
-                nv.getHoTen(), 
+                nv.getId(),
+                nv.getHoTen(),
                 nv.getGioiTinh(), 
                 nv.getNgaySinh(), 
                 nv.getDienThoai(), 
@@ -365,6 +407,27 @@ public class NhanVienUI extends JFrame {
         }
         
         return true;
+    }
+
+    /**
+     * Performs the search operation based on the keyword
+     */
+    private void performSearch() {
+        String keyword = txtTimKiem.getText().trim();
+        tableModel.setRowCount(0);
+        List<NhanVien> list = controller.searchNhanVien(keyword);
+        for (NhanVien nv : list) {
+            tableModel.addRow(new Object[]{
+                nv.getId(),
+                nv.getHoTen(),
+                nv.getGioiTinh(),
+                nv.getNgaySinh(),
+                nv.getDienThoai(),
+                nv.getEmail(),
+                nv.getChucVu(),
+                formatTrangThai(nv.getTrangThai())
+            });
+        }
     }
 
     public static void main(String[] args) {

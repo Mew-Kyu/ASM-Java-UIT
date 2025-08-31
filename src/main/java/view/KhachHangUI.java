@@ -8,6 +8,8 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.List;
 
 public class KhachHangUI extends BaseAuthenticatedUI {
@@ -15,12 +17,13 @@ public class KhachHangUI extends BaseAuthenticatedUI {
     private JTable table;
     private DefaultTableModel tableModel;
     private JTextField txtId, txtHoTen, txtDienThoai, txtDiaChi;
-    private JButton btnThem, btnSua, btnXoa, btnLamMoi;
+    private JTextField txtTimKiem;
+    private JButton btnThem, btnSua, btnXoa, btnLamMoi, btnTimKiem;
 
     public KhachHangUI() {
         controller = new KhachHangController();
         setTitle("Quản lý Khách Hàng");
-        setSize(700, 400);
+        setSize(700, 450);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         initComponents();
@@ -28,6 +31,16 @@ public class KhachHangUI extends BaseAuthenticatedUI {
     }
 
     private void initComponents() {
+        // Search panel
+        JPanel panelSearch = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelSearch.setBorder(BorderFactory.createTitledBorder("Tìm kiếm"));
+        panelSearch.add(new JLabel("Từ khóa:"));
+        txtTimKiem = new JTextField(20);
+        panelSearch.add(txtTimKiem);
+        btnTimKiem = new JButton("Tìm kiếm");
+        btnTimKiem.setPreferredSize(new Dimension(90, 25));
+        panelSearch.add(btnTimKiem);
+
         JPanel panelInput = new JPanel(new GridLayout(4, 2, 5, 5));
         panelInput.setBorder(BorderFactory.createTitledBorder("Thông tin khách hàng"));
         panelInput.add(new JLabel("Mã KH:"));
@@ -43,6 +56,11 @@ public class KhachHangUI extends BaseAuthenticatedUI {
         panelInput.add(new JLabel("Địa chỉ:"));
         txtDiaChi = new JTextField();
         panelInput.add(txtDiaChi);
+
+        // Top panel containing search and input panels
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(panelSearch, BorderLayout.NORTH);
+        topPanel.add(panelInput, BorderLayout.CENTER);
 
         JPanel panelButton = new JPanel();
         btnThem = new JButton("Thêm");
@@ -63,9 +81,27 @@ public class KhachHangUI extends BaseAuthenticatedUI {
         JScrollPane scrollPane = new JScrollPane(table);
 
         setLayout(new BorderLayout(5, 5));
-        add(panelInput, BorderLayout.NORTH);
+        add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
         add(panelButton, BorderLayout.SOUTH);
+
+        // Search functionality - only when button is clicked or Enter key pressed
+        btnTimKiem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                performSearch();
+            }
+        });
+
+        // Allow Enter key to trigger search
+        txtTimKiem.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    performSearch();
+                }
+            }
+        });
 
         btnThem.addActionListener(new ActionListener() {
             @Override
@@ -107,6 +143,8 @@ public class KhachHangUI extends BaseAuthenticatedUI {
             @Override
             public void actionPerformed(ActionEvent e) {
                 clearInput();
+                txtTimKiem.setText(""); // Clear search field
+                loadTable(); // Reload all data
             }
         });
         table.getSelectionModel().addListSelectionListener(e -> {
@@ -134,6 +172,15 @@ public class KhachHangUI extends BaseAuthenticatedUI {
         txtDienThoai.setText("");
         txtDiaChi.setText("");
         table.clearSelection();
+    }
+
+    private void performSearch() {
+        String keyword = txtTimKiem.getText();
+        tableModel.setRowCount(0);
+        List<KhachHang> ds = controller.timKiemKhachHang(keyword);
+        for (KhachHang kh : ds) {
+            tableModel.addRow(new Object[]{kh.getId(), kh.getHoTen(), kh.getDienThoai(), kh.getDiaChi()});
+        }
     }
 
     public static void main(String[] args) {

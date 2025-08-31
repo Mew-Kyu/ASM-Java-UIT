@@ -9,4 +9,5 @@ public interface INhanVienDAO {
     void delete(int maNV);
     NhanVien findById(int maNV);
     List<NhanVien> findAll();
+    List<NhanVien> searchByKeyword(String keyword);
 }

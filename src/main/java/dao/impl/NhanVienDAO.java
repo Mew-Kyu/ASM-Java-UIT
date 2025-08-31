@@ -69,6 +69,27 @@ public class NhanVienDAO implements INhanVienDAO {
     @Override
     public List<NhanVien> findAll() {
         EntityManager em = emf.createEntityManager();
-        return em.createQuery("SELECT nv FROM NhanVien nv", NhanVien.class).getResultList();
+        try {
+            return em.createQuery("SELECT nv FROM NhanVien nv", NhanVien.class).getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    @Override
+    public List<NhanVien> searchByKeyword(String keyword) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            String jpql = "SELECT nv FROM NhanVien nv WHERE " +
+                         "LOWER(nv.hoTen) LIKE LOWER(:keyword) OR " +
+                         "nv.dienThoai LIKE :keyword OR " +
+                         "LOWER(nv.email) LIKE LOWER(:keyword) OR " +
+                         "LOWER(nv.chucVu) LIKE LOWER(:keyword)";
+            return em.createQuery(jpql, NhanVien.class)
+                    .setParameter("keyword", "%" + keyword + "%")
+                    .getResultList();
+        } finally {
+            em.close();
+        }
     }
 }

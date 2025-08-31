@@ -79,4 +79,20 @@ public class KhachHangDAO implements IKhachHangDAO {
             em.close();
         }
     }
+
+    @Override
+    public List<KhachHang> searchByKeyword(String keyword) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            String jpql = "SELECT k FROM KhachHang k WHERE " +
+                         "LOWER(k.hoTen) LIKE LOWER(:keyword) OR " +
+                         "k.dienThoai LIKE :keyword OR " +
+                         "LOWER(k.diaChi) LIKE LOWER(:keyword)";
+            return em.createQuery(jpql, KhachHang.class)
+                    .setParameter("keyword", "%" + keyword + "%")
+                    .getResultList();
+        } finally {
+            em.close();
+        }
+    }
 }
