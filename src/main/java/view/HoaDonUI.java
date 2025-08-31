@@ -24,6 +24,7 @@ import util.PDFInvoiceGenerator;
 import com.toedter.calendar.JDateChooser; // Added for date picker
 import java.util.Date; // for JDateChooser value
 import java.time.ZoneId; // for conversion to LocalDate
+import java.util.ArrayList; // pagination list
 
 public class HoaDonUI extends JFrame {
     private JTextField txtMaHD, txtTongTien, txtSelectedEmployee, txtSelectedCustomer, txtCustomerName;
@@ -42,6 +43,16 @@ public class HoaDonUI extends JFrame {
     private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnViewDetails, btnAddDetail, btnPrintPDF;
     private JTable tableHoaDon;
     private DefaultTableModel tableModelHoaDon;
+    // Pagination state
+    private List<HoaDon> allHoaDonCache = new ArrayList<>();
+    private List<HoaDon> filteredHoaDon = new ArrayList<>();
+    private int currentPage = 1;
+    private int pageSize = 30;
+    private int totalPages = 1;
+    private JLabel lblPageInfo;
+    private JButton btnFirstPage, btnPrevPage, btnNextPage, btnLastPage;
+    private JComboBox<Integer> cboPageSize;
+
     private NhanVien selectedEmployee = null;
     private KhachHang selectedCustomer = null;
 
@@ -673,7 +684,253 @@ public class HoaDonUI extends JFrame {
         JScrollPane scrollPane = new JScrollPane(tableHoaDon);
         panel.add(scrollPane, BorderLayout.CENTER);
 
+        // Pagination controls panel
+        JPanel paginationPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 5));
+        paginationPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+        btnFirstPage = new JButton("|<");
+        btnPrevPage = new JButton("<");
+        btnNextPage = new JButton(">");
+        btnLastPage = new JButton(">|");
+        stylePaginationButton(btnFirstPage);
+        stylePaginationButton(btnPrevPage);
+        stylePaginationButton(btnNextPage);
+        stylePaginationButton(btnLastPage);
+
+        lblPageInfo = new JLabel("Page 1/1 (0 records)");
+        lblPageInfo.setFont(new Font("Arial", Font.PLAIN, 11));
+
+        cboPageSize = new JComboBox<>(new Integer[]{10, 30, 50, 100});
+        cboPageSize.setSelectedItem(30);
+        cboPageSize.setFont(new Font("Arial", Font.PLAIN, 11));
+        cboPageSize.setPreferredSize(new Dimension(70, 26));
+
+        paginationPanel.add(new JLabel("Rows:"));
+        paginationPanel.add(cboPageSize);
+        paginationPanel.add(btnFirstPage);
+        paginationPanel.add(btnPrevPage);
+        paginationPanel.add(lblPageInfo);
+        paginationPanel.add(btnNextPage);
+        paginationPanel.add(btnLastPage);
+
+        panel.add(paginationPanel, BorderLayout.SOUTH);
+
+        // Add listeners for pagination
+        btnFirstPage.addActionListener(e -> {
+            if (currentPage != 1) {
+                currentPage = 1;
+                renderCurrentPage();
+            }
+        });
+        btnPrevPage.addActionListener(e -> {
+            if (currentPage > 1) {
+                currentPage--;
+                renderCurrentPage();
+            }
+        });
+        btnNextPage.addActionListener(e -> {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderCurrentPage();
+            }
+        });
+        btnLastPage.addActionListener(e -> {
+            if (currentPage != totalPages) {
+                currentPage = totalPages;
+                renderCurrentPage();
+            }
+        });
+        cboPageSize.addActionListener(e -> {
+            Integer sel = (Integer) cboPageSize.getSelectedItem();
+            if (sel != null && sel != pageSize) {
+                pageSize = sel;
+                currentPage = 1;
+                recalcPagination();
+                renderCurrentPage();
+            }
+        });
+
         return panel;
+    }
+
+    private void stylePaginationButton(JButton btn) {
+        btn.setMargin(new Insets(2, 8, 2, 8));
+        btn.setFont(new Font("Arial", Font.PLAIN, 11));
+    }
+
+    private void recalcPagination() {
+        int total = filteredHoaDon.size();
+        totalPages = total == 0 ? 1 : (int) Math.ceil(total / (double) pageSize);
+        if (currentPage > totalPages) currentPage = totalPages;
+        updatePaginationControls();
+    }
+
+    private void updatePaginationControls() {
+        int totalRecords = filteredHoaDon.size();
+        lblPageInfo.setText("Page " + currentPage + "/" + totalPages + " (" + totalRecords + " records)");
+        btnFirstPage.setEnabled(currentPage > 1);
+        btnPrevPage.setEnabled(currentPage > 1);
+        btnNextPage.setEnabled(currentPage < totalPages);
+        btnLastPage.setEnabled(currentPage < totalPages);
+    }
+
+    private void renderCurrentPage() {
+        tableModelHoaDon.setRowCount(0);
+        if (filteredHoaDon.isEmpty()) {
+            updatePaginationControls();
+            return;
+        }
+        int start = (currentPage - 1) * pageSize;
+        int end = Math.min(start + pageSize, filteredHoaDon.size());
+        for (int i = start; i < end; i++) {
+            HoaDon hd = filteredHoaDon.get(i);
+            Object[] row = {
+                hd.getId(),
+                hd.getNgayLap().format(dateFormatter),
+                hd.getMaKH() != null ? hd.getMaKH().getHoTen() : "Khách lẻ",
+                hd.getMaNV() != null ? hd.getMaNV().getHoTen() : "N/A",
+                String.format("%,.0f VNĐ", hd.getTongTien()),
+                hd.getTotalItems()
+            };
+            tableModelHoaDon.addRow(row);
+        }
+        updatePaginationControls();
+    }
+
+    private void loadHoaDonTable() {
+        try {
+            allHoaDonCache = hoaDonController.getAllHoaDonWithDetails();
+            filteredHoaDon = new ArrayList<>(allHoaDonCache);
+            currentPage = 1;
+            recalcPagination();
+            renderCurrentPage();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải dữ liệu: " + e.getMessage());
+        }
+    }
+
+    private void loadSearchComboBoxes() {
+        // Load search payment status combo box
+        DefaultComboBoxModel<String> searchPaymentStatusModel = new DefaultComboBoxModel<>();
+        cboSearchPaymentStatus.setModel(searchPaymentStatusModel);
+        searchPaymentStatusModel.addElement("Tất cả"); // Add "All" option
+        searchPaymentStatusModel.addElement("Chờ thanh toán");
+        searchPaymentStatusModel.addElement("Đang xử lý");
+        searchPaymentStatusModel.addElement("Đã hoàn tất");
+        searchPaymentStatusModel.addElement("Thất bại");
+        searchPaymentStatusModel.addElement("Đã hoàn tiền");
+        searchPaymentStatusModel.addElement("Đã hủy");
+        cboSearchPaymentStatus.setSelectedIndex(0);
+    }
+
+    private void loadComboBoxes() {
+        try {
+            // Set current user as default employee
+            try {
+                TaiKhoan currentUser = SessionManager.getInstance().getCurrentUser();
+                if (currentUser != null && currentUser.getMaNV() != null) {
+                    selectedEmployee = currentUser.getMaNV();
+                    txtSelectedEmployee.setText(selectedEmployee.getHoTen() + " - " + selectedEmployee.getChucVu());
+                }
+            } catch (Exception ex) {
+                // If there's an issue with current user, just continue without setting default
+            }
+
+            // Load payment methods
+            DefaultComboBoxModel<HinhThucThanhToan> paymentMethodModel = new DefaultComboBoxModel<>();
+            cboHinhThucThanhToan.setModel(paymentMethodModel);
+            paymentMethodModel.addElement(null); // Add empty option
+
+            List<HinhThucThanhToan> paymentMethods = hinhThucThanhToanController.getActiveHinhThucThanhToan();
+            for (HinhThucThanhToan method : paymentMethods) {
+                paymentMethodModel.addElement(method);
+            }
+            cboHinhThucThanhToan.setSelectedIndex(0); // Select empty option
+
+            // Load payment statuses
+            DefaultComboBoxModel<String> paymentStatusModel = new DefaultComboBoxModel<>();
+            cboTrangThaiThanhToan.setModel(paymentStatusModel);
+            paymentStatusModel.addElement("Chờ thanh toán");
+            paymentStatusModel.addElement("Đang xử lý");
+            paymentStatusModel.addElement("Đã hoàn tất");
+            paymentStatusModel.addElement("Thất bại");
+            paymentStatusModel.addElement("Đã hoàn tiền");
+            paymentStatusModel.addElement("Đã hủy");
+            cboTrangThaiThanhToan.setSelectedIndex(0);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải combo box: " + e.getMessage());
+        }
+    }
+
+    private void searchHoaDon() {
+        try {
+            // Ensure we have the latest data (optional – can comment out if not desired)
+            allHoaDonCache = hoaDonController.getAllHoaDonWithDetails();
+
+            String maHD = txtSearchMaHD.getText().trim();
+            String khachHang = txtSearchCustomer.getText().trim();
+            String nhanVien = txtSearchEmployee.getText().trim();
+            LocalDate startDate = getLocalDateFromChooser(txtSearchFromDate);
+            LocalDate endDate = getLocalDateFromChooser(txtSearchToDate);
+            String trangThai = (String) cboSearchPaymentStatus.getSelectedItem();
+
+            if ("Tất cả".equals(trangThai)) {
+                trangThai = null;
+            } else if (trangThai != null) {
+                trangThai = DISPLAY_TO_DB.get(trangThai);
+            }
+
+            filteredHoaDon = new ArrayList<>();
+            int resultCount = 0;
+            for (HoaDon hd : allHoaDonCache) {
+                boolean matches = true;
+                if (!maHD.isEmpty() && matches) {
+                    if (!String.valueOf(hd.getId()).contains(maHD)) matches = false;
+                }
+                if (!khachHang.isEmpty() && matches) {
+                    String customerName = hd.getMaKH() != null ? hd.getMaKH().getHoTen() : "Khách lẻ";
+                    if (!customerName.toLowerCase().contains(khachHang.toLowerCase())) matches = false;
+                }
+                if (!nhanVien.isEmpty() && matches) {
+                    String employeeName = hd.getMaNV() != null ? hd.getMaNV().getHoTen() : "";
+                    if (!employeeName.toLowerCase().contains(nhanVien.toLowerCase())) matches = false;
+                }
+                if (startDate != null && matches) {
+                    if (hd.getNgayLap().isBefore(startDate)) matches = false;
+                }
+                if (endDate != null && matches) {
+                    if (hd.getNgayLap().isAfter(endDate)) matches = false;
+                }
+                if (trangThai != null && matches) {
+                    if (!trangThai.equals(hd.getTrangThaiThanhToan())) matches = false;
+                }
+                if (matches) {
+                    filteredHoaDon.add(hd);
+                    resultCount++;
+                }
+            }
+            currentPage = 1;
+            recalcPagination();
+            renderCurrentPage();
+            JOptionPane.showMessageDialog(this, "Tìm thấy " + resultCount + " kết quả phù hợp.");
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi tìm kiếm: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void clearSearchFields() {
+        txtSearchMaHD.setText("");
+        txtSearchCustomer.setText("");
+        txtSearchEmployee.setText("");
+        txtSearchFromDate.setDate(null);
+        txtSearchToDate.setDate(null);
+        cboSearchPaymentStatus.setSelectedIndex(0);
+        // Reset filtered list to all data and re-render
+        filteredHoaDon = new ArrayList<>(allHoaDonCache);
+        currentPage = 1;
+        recalcPagination();
+        renderCurrentPage();
     }
 
     private JPanel createButtonPanel() {
@@ -850,180 +1107,6 @@ public class HoaDonUI extends JFrame {
         loadSearchComboBoxes();
     }
 
-    private void loadSearchComboBoxes() {
-        // Load search payment status combo box
-        DefaultComboBoxModel<String> searchPaymentStatusModel = new DefaultComboBoxModel<>();
-        cboSearchPaymentStatus.setModel(searchPaymentStatusModel);
-        searchPaymentStatusModel.addElement("Tất cả"); // Add "All" option
-        searchPaymentStatusModel.addElement("Chờ thanh toán");
-        searchPaymentStatusModel.addElement("Đang xử lý");
-        searchPaymentStatusModel.addElement("Đã hoàn tất");
-        searchPaymentStatusModel.addElement("Thất bại");
-        searchPaymentStatusModel.addElement("Đã hoàn tiền");
-        searchPaymentStatusModel.addElement("Đã hủy");
-        cboSearchPaymentStatus.setSelectedIndex(0);
-    }
-
-    private void loadHoaDonTable() {
-        tableModelHoaDon.setRowCount(0);
-        try {
-            // Use eager fetch to avoid lazy initialization when rendering table
-            List<HoaDon> list = hoaDonController.getAllHoaDonWithDetails();
-            for (HoaDon hd : list) {
-                Object[] row = {
-                        hd.getId(),
-                        hd.getNgayLap().format(dateFormatter),
-                        hd.getMaKH() != null ? hd.getMaKH().getHoTen() : "Khách lẻ",
-                        hd.getMaNV() != null ? hd.getMaNV().getHoTen() : "N/A",
-                        String.format("%,.0f VNĐ", hd.getTongTien()),
-                        hd.getTotalItems()
-                };
-                tableModelHoaDon.addRow(row);
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi khi tải dữ liệu: " + e.getMessage());
-        }
-    }
-
-    private void loadComboBoxes() {
-        try {
-            // Set current user as default employee
-            try {
-                TaiKhoan currentUser = SessionManager.getInstance().getCurrentUser();
-                if (currentUser != null && currentUser.getMaNV() != null) {
-                    selectedEmployee = currentUser.getMaNV();
-                    txtSelectedEmployee.setText(selectedEmployee.getHoTen() + " - " + selectedEmployee.getChucVu());
-                }
-            } catch (Exception ex) {
-                // If there's an issue with current user, just continue without setting default
-            }
-
-            // Load payment methods
-            DefaultComboBoxModel<HinhThucThanhToan> paymentMethodModel = new DefaultComboBoxModel<>();
-            cboHinhThucThanhToan.setModel(paymentMethodModel);
-            paymentMethodModel.addElement(null); // Add empty option
-
-            List<HinhThucThanhToan> paymentMethods = hinhThucThanhToanController.getActiveHinhThucThanhToan();
-            for (HinhThucThanhToan method : paymentMethods) {
-                paymentMethodModel.addElement(method);
-            }
-            cboHinhThucThanhToan.setSelectedIndex(0); // Select empty option
-
-            // Load payment statuses
-            DefaultComboBoxModel<String> paymentStatusModel = new DefaultComboBoxModel<>();
-            cboTrangThaiThanhToan.setModel(paymentStatusModel);
-            paymentStatusModel.addElement("Chờ thanh toán");
-            paymentStatusModel.addElement("Đang xử lý");
-            paymentStatusModel.addElement("Đã hoàn tất");
-            paymentStatusModel.addElement("Thất bại");
-            paymentStatusModel.addElement("Đã hoàn tiền");
-            paymentStatusModel.addElement("Đã hủy");
-            cboTrangThaiThanhToan.setSelectedIndex(0);
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi khi tải combo box: " + e.getMessage());
-        }
-    }
-
-    private void searchHoaDon() {
-        try {
-            String maHD = txtSearchMaHD.getText().trim();
-            String khachHang = txtSearchCustomer.getText().trim();
-            String nhanVien = txtSearchEmployee.getText().trim();
-            LocalDate startDate = getLocalDateFromChooser(txtSearchFromDate);
-            LocalDate endDate = getLocalDateFromChooser(txtSearchToDate);
-            String trangThai = (String) cboSearchPaymentStatus.getSelectedItem();
-
-            // Convert "Tất cả" to null for search
-            if ("Tất cả".equals(trangThai)) {
-                trangThai = null;
-            } else if (trangThai != null) {
-                // Convert display value to database value
-                trangThai = DISPLAY_TO_DB.get(trangThai);
-            }
-
-            // Perform search using the existing table data for client-side filtering
-            List<HoaDon> allInvoices = hoaDonController.getAllHoaDonWithDetails();
-            tableModelHoaDon.setRowCount(0);
-            int resultCount = 0;
-
-            for (HoaDon hd : allInvoices) {
-                boolean matches = true;
-
-                // Filter by invoice ID
-                if (!maHD.isEmpty()) {
-                    if (!String.valueOf(hd.getId()).contains(maHD)) {
-                        matches = false;
-                    }
-                }
-
-                // Filter by customer name
-                if (!khachHang.isEmpty() && matches) {
-                    String customerName = hd.getMaKH() != null ? hd.getMaKH().getHoTen() : "Khách lẻ";
-                    if (!customerName.toLowerCase().contains(khachHang.toLowerCase())) {
-                        matches = false;
-                    }
-                }
-
-                // Filter by employee name
-                if (!nhanVien.isEmpty() && matches) {
-                    String employeeName = hd.getMaNV() != null ? hd.getMaNV().getHoTen() : "";
-                    if (!employeeName.toLowerCase().contains(nhanVien.toLowerCase())) {
-                        matches = false;
-                    }
-                }
-
-                // Filter by date range
-                if (startDate != null && matches) {
-                    if (hd.getNgayLap().isBefore(startDate)) {
-                        matches = false;
-                    }
-                }
-
-                if (endDate != null && matches) {
-                    if (hd.getNgayLap().isAfter(endDate)) {
-                        matches = false;
-                    }
-                }
-
-                // Filter by payment status
-                if (trangThai != null && matches) {
-                    if (!trangThai.equals(hd.getTrangThaiThanhToan())) {
-                        matches = false;
-                    }
-                }
-
-                if (matches) {
-                    Object[] row = {
-                            hd.getId(),
-                            hd.getNgayLap().format(dateFormatter),
-                            hd.getMaKH() != null ? hd.getMaKH().getHoTen() : "Khách lẻ",
-                            hd.getMaNV() != null ? hd.getMaNV().getHoTen() : "N/A",
-                            String.format("%,.0f VNĐ", hd.getTongTien()),
-                            hd.getTotalItems()
-                    };
-                    tableModelHoaDon.addRow(row);
-                    resultCount++;
-                }
-            }
-
-            JOptionPane.showMessageDialog(this, "Tìm thấy " + resultCount + " kết quả phù hợp.");
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi khi tìm kiếm: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void clearSearchFields() {
-        txtSearchMaHD.setText("");
-        txtSearchCustomer.setText("");
-        txtSearchEmployee.setText("");
-        txtSearchFromDate.setDate(null);
-        txtSearchToDate.setDate(null);
-        cboSearchPaymentStatus.setSelectedIndex(0);
-    }
-
-    // Rest of the methods remain the same...
     private void selectEmployeeDialog() {
         NhanVien employee = EmployeeSelectionDialog.showDialog(this);
         if (employee != null) {
