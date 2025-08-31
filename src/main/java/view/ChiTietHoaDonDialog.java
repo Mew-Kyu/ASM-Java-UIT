@@ -4,10 +4,12 @@ import controller.ChiTietHoaDonController;
 import controller.HoaDonController;
 import model.ChiTietHoaDon;
 import model.HoaDon;
+import util.PDFInvoiceGenerator;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.File;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -18,7 +20,7 @@ public class ChiTietHoaDonDialog extends JDialog {
     private JTable table;
     private DefaultTableModel tableModel;
     private JLabel lblHoaDonInfo;
-    private JButton btnClose, btnDelete, btnRefresh;
+    private JButton btnClose, btnDelete, btnRefresh, btnPrintPDF;
     private JFrame parentFrame;
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -109,6 +111,10 @@ public class ChiTietHoaDonDialog extends JDialog {
         btnRefresh.setIcon(new ImageIcon());
         btnRefresh.setPreferredSize(new Dimension(100, 30));
 
+        btnPrintPDF = new JButton("In PDF");
+        btnPrintPDF.setIcon(new ImageIcon());
+        btnPrintPDF.setPreferredSize(new Dimension(100, 30));
+
         btnClose = new JButton("Đóng");
         btnClose.setIcon(new ImageIcon());
         btnClose.setPreferredSize(new Dimension(80, 30));
@@ -116,6 +122,7 @@ public class ChiTietHoaDonDialog extends JDialog {
         panel.add(btnDelete);
         panel.add(btnRefresh);
         panel.add(Box.createHorizontalStrut(20));
+        panel.add(btnPrintPDF);
         panel.add(btnClose);
 
         return panel;
@@ -125,6 +132,7 @@ public class ChiTietHoaDonDialog extends JDialog {
         btnClose.addActionListener(e -> dispose());
         btnRefresh.addActionListener(e -> loadData());
         btnDelete.addActionListener(e -> deleteChiTiet());
+        btnPrintPDF.addActionListener(e -> printInvoiceToPDF());
 
         // Double-click to edit quantity
         table.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -240,7 +248,6 @@ public class ChiTietHoaDonDialog extends JDialog {
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi xóa: " + e.getMessage());
-            e.printStackTrace(); // For debugging
         }
     }
 
@@ -290,6 +297,58 @@ public class ChiTietHoaDonDialog extends JDialog {
             JOptionPane.showMessageDialog(this, "Số lượng không hợp lệ!");
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi cập nhật: " + e.getMessage());
+        }
+    }
+
+    private void printInvoiceToPDF() {
+        try {
+            // Open file chooser for save location
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Chọn nơi lưu file PDF");
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("PDF Files", "pdf"));
+            fileChooser.setSelectedFile(new File("HoaDon_" + hoaDon.getId() + ".pdf"));
+
+            int userSelection = fileChooser.showSaveDialog(this);
+
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fileChooser.getSelectedFile();
+                String filePath = fileToSave.getAbsolutePath();
+
+                // Ensure file has .pdf extension
+                if (!filePath.toLowerCase().endsWith(".pdf")) {
+                    filePath += ".pdf";
+                }
+
+                // Generate PDF
+                PDFInvoiceGenerator.generateInvoicePDF(hoaDon, filePath);
+
+                JOptionPane.showMessageDialog(this,
+                    "Đã in hóa đơn thành công!\nFile được lưu tại: " + filePath,
+                    "Thành công",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+                // Ask if user wants to open the PDF
+                int openFile = JOptionPane.showConfirmDialog(this,
+                    "Bạn có muốn mở file PDF vừa tạo không?",
+                    "Mở file",
+                    JOptionPane.YES_NO_OPTION);
+
+                if (openFile == JOptionPane.YES_OPTION) {
+                    try {
+                        if (Desktop.isDesktopSupported()) {
+                            Desktop.getDesktop().open(new File(filePath));
+                        }
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(this,
+                            "Không thể mở file PDF. Vui lòng mở thủ công tại: " + filePath,
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    }
+                }
+            }
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi tạo PDF: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 

@@ -12,18 +12,24 @@ import util.SessionManager;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.math.BigDecimal;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.io.File;
 import util.PDFInvoiceGenerator;
 
 public class HoaDonUI extends JFrame {
     private JTextField txtMaHD, txtNgayLap, txtTongTien, txtSelectedEmployee, txtSelectedCustomer, txtCustomerName;
+    // Search fields
+    private JTextField txtSearchMaHD, txtSearchCustomer, txtSearchEmployee;
+    private JTextField txtSearchFromDate, txtSearchToDate;
+    private JComboBox<String> cboSearchPaymentStatus;
+    private JButton btnSearch, btnClearSearch;
     private JButton btnSelectEmployee, btnSelectCustomer;
     private JRadioButton radioKhachLe, radioHoiVien;
     private ButtonGroup customerTypeGroup;
@@ -44,10 +50,32 @@ public class HoaDonUI extends JFrame {
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
+    // Payment status mapping
+    private static final Map<String, String> DB_TO_DISPLAY = new HashMap<>();
+    private static final Map<String, String> DISPLAY_TO_DB = new HashMap<>();
+
+    static {
+        // Map database values to display values
+        DB_TO_DISPLAY.put("PENDING", "Chờ thanh toán");
+        DB_TO_DISPLAY.put("PROCESSING", "Đang xử lý");
+        DB_TO_DISPLAY.put("COMPLETED", "Đã hoàn tất");
+        DB_TO_DISPLAY.put("FAILED", "Thất bại");
+        DB_TO_DISPLAY.put("REFUNDED", "Đã hoàn tiền");
+        DB_TO_DISPLAY.put("CANCELLED", "Đã hủy");
+
+        // Map display values to database values
+        DISPLAY_TO_DB.put("Chờ thanh toán", "PENDING");
+        DISPLAY_TO_DB.put("Đang xử lý", "PROCESSING");
+        DISPLAY_TO_DB.put("Đã hoàn tất", "COMPLETED");
+        DISPLAY_TO_DB.put("Thất bại", "FAILED");
+        DISPLAY_TO_DB.put("Đã hoàn tiền", "REFUNDED");
+        DISPLAY_TO_DB.put("Đã hủy", "CANCELLED");
+    }
+
     public HoaDonUI() {
         initControllers();
         setTitle("Quản Lý Hóa Đơn");
-        setSize(900, 600);
+        setSize(1200, 700);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         initComponents();
@@ -69,6 +97,10 @@ public class HoaDonUI extends JFrame {
         JPanel topPanel = createInputPanel();
         add(topPanel, BorderLayout.NORTH);
 
+        // Add search panel
+        JPanel searchPanel = createSearchPanel();
+        add(searchPanel, BorderLayout.WEST);
+
         JPanel centerPanel = createTablePanel();
         add(centerPanel, BorderLayout.CENTER);
 
@@ -76,6 +108,73 @@ public class HoaDonUI extends JFrame {
         add(bottomPanel, BorderLayout.SOUTH);
 
         setupEventHandlers();
+    }
+
+    private JPanel createSearchPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder("Tìm kiếm hóa đơn"));
+        panel.setPreferredSize(new Dimension(250, 0));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // Row 1 - Invoice ID
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 1;
+        panel.add(new JLabel("Mã HĐ:"), gbc);
+        gbc.gridx = 1; gbc.gridwidth = 2;
+        txtSearchMaHD = new JTextField(15);
+        panel.add(txtSearchMaHD, gbc);
+
+        // Row 2 - Customer
+        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 1;
+        panel.add(new JLabel("Khách hàng:"), gbc);
+        gbc.gridx = 1; gbc.gridwidth = 2;
+        txtSearchCustomer = new JTextField(15);
+        panel.add(txtSearchCustomer, gbc);
+
+        // Row 3 - Employee
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 1;
+        panel.add(new JLabel("Nhân viên:"), gbc);
+        gbc.gridx = 1; gbc.gridwidth = 2;
+        txtSearchEmployee = new JTextField(15);
+        panel.add(txtSearchEmployee, gbc);
+
+        // Row 4 - From Date
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 1;
+        panel.add(new JLabel("Từ ngày:"), gbc);
+        gbc.gridx = 1; gbc.gridwidth = 2;
+        txtSearchFromDate = new JTextField(15);
+        txtSearchFromDate.setToolTipText("dd/MM/yyyy");
+        panel.add(txtSearchFromDate, gbc);
+
+        // Row 5 - To Date
+        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 1;
+        panel.add(new JLabel("Đến ngày:"), gbc);
+        gbc.gridx = 1; gbc.gridwidth = 2;
+        txtSearchToDate = new JTextField(15);
+        txtSearchToDate.setToolTipText("dd/MM/yyyy");
+        panel.add(txtSearchToDate, gbc);
+
+        // Row 6 - Payment Status
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 1;
+        panel.add(new JLabel("Trạng thái TT:"), gbc);
+        gbc.gridx = 1; gbc.gridwidth = 2;
+        cboSearchPaymentStatus = new JComboBox<>();
+        cboSearchPaymentStatus.setPreferredSize(new Dimension(150, 25));
+        panel.add(cboSearchPaymentStatus, gbc);
+
+        // Row 7 - Buttons
+        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 1;
+        btnSearch = new JButton("Tìm kiếm");
+        btnSearch.setPreferredSize(new Dimension(100, 30));
+        panel.add(btnSearch, gbc);
+
+        gbc.gridx = 1; gbc.gridwidth = 1;
+        btnClearSearch = new JButton("Xóa bộ lọc");
+        btnClearSearch.setPreferredSize(new Dimension(100, 30));
+        panel.add(btnClearSearch, gbc);
+
+        return panel;
     }
 
     private JPanel createInputPanel() {
@@ -119,7 +218,7 @@ public class HoaDonUI extends JFrame {
         radioHoiVien = new JRadioButton("Hội viên");
         panel.add(radioHoiVien, gbc);
 
-        // Customer selection button - moved after radio buttons
+        // Customer selection button
         gbc.gridx = 4; gbc.fill = GridBagConstraints.NONE;
         btnSelectCustomer = new JButton("Chọn KH");
         btnSelectCustomer.setPreferredSize(new Dimension(90, 25));
@@ -166,7 +265,7 @@ public class HoaDonUI extends JFrame {
                     HinhThucThanhToan httt = (HinhThucThanhToan) value;
                     setText(httt.getTenHTTT());
                 } else if (value == null) {
-                    setText("-- Chọn hình thức thanh toán --");
+                    setText("");
                 }
                 return this;
             }
@@ -258,6 +357,13 @@ public class HoaDonUI extends JFrame {
         btnSelectEmployee.addActionListener(e -> selectEmployeeDialog());
         btnSelectCustomer.addActionListener(e -> selectCustomerDialog());
 
+        // Add search event handlers
+        btnSearch.addActionListener(e -> searchHoaDon());
+        btnClearSearch.addActionListener(e -> {
+            clearSearchFields();
+            loadHoaDonTable(); // Reload all data when clearing search
+        });
+
         // Add radio button event handlers
         radioKhachLe.addActionListener(e -> {
             if (radioKhachLe.isSelected()) {
@@ -282,11 +388,39 @@ public class HoaDonUI extends JFrame {
             }
         });
 
+        // Add double-click listener to table
+        tableHoaDon.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    int row = tableHoaDon.rowAtPoint(e.getPoint());
+                    if (row >= 0) {
+                        tableHoaDon.setRowSelectionInterval(row, row);
+                        viewHoaDonDetails();
+                    }
+                }
+            }
+        });
     }
 
     private void loadData() {
         loadHoaDonTable();
         loadComboBoxes();
+        loadSearchComboBoxes();
+    }
+
+    private void loadSearchComboBoxes() {
+        // Load search payment status combo box
+        DefaultComboBoxModel<String> searchPaymentStatusModel = new DefaultComboBoxModel<>();
+        cboSearchPaymentStatus.setModel(searchPaymentStatusModel);
+        searchPaymentStatusModel.addElement("Tất cả"); // Add "All" option
+        searchPaymentStatusModel.addElement("Chờ thanh toán");
+        searchPaymentStatusModel.addElement("Đang xử lý");
+        searchPaymentStatusModel.addElement("Đã hoàn tất");
+        searchPaymentStatusModel.addElement("Thất bại");
+        searchPaymentStatusModel.addElement("Đã hoàn tiền");
+        searchPaymentStatusModel.addElement("Đã hủy");
+        cboSearchPaymentStatus.setSelectedIndex(0);
     }
 
     private void loadHoaDonTable() {
@@ -327,7 +461,7 @@ public class HoaDonUI extends JFrame {
             DefaultComboBoxModel<HinhThucThanhToan> paymentMethodModel = new DefaultComboBoxModel<>();
             cboHinhThucThanhToan.setModel(paymentMethodModel);
             paymentMethodModel.addElement(null); // Add empty option
-            
+
             List<HinhThucThanhToan> paymentMethods = hinhThucThanhToanController.getActiveHinhThucThanhToan();
             for (HinhThucThanhToan method : paymentMethods) {
                 paymentMethodModel.addElement(method);
@@ -337,22 +471,136 @@ public class HoaDonUI extends JFrame {
             // Load payment statuses
             DefaultComboBoxModel<String> paymentStatusModel = new DefaultComboBoxModel<>();
             cboTrangThaiThanhToan.setModel(paymentStatusModel);
-            paymentStatusModel.addElement(null);
-            paymentStatusModel.addElement("PENDING");
-            paymentStatusModel.addElement("COMPLETED");
-            paymentStatusModel.addElement("FAILED");
-            cboTrangThaiThanhToan.setSelectedIndex(0); // Default to "Chưa thanh toán"
+            paymentStatusModel.addElement("Chờ thanh toán");
+            paymentStatusModel.addElement("Đang xử lý");
+            paymentStatusModel.addElement("Đã hoàn tất");
+            paymentStatusModel.addElement("Thất bại");
+            paymentStatusModel.addElement("Đã hoàn tiền");
+            paymentStatusModel.addElement("Đã hủy");
+            cboTrangThaiThanhToan.setSelectedIndex(0);
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi tải combo box: " + e.getMessage());
         }
     }
 
+    private void searchHoaDon() {
+        try {
+            String maHD = txtSearchMaHD.getText().trim();
+            String khachHang = txtSearchCustomer.getText().trim();
+            String nhanVien = txtSearchEmployee.getText().trim();
+            String fromDate = txtSearchFromDate.getText().trim();
+            String toDate = txtSearchToDate.getText().trim();
+            String trangThai = (String) cboSearchPaymentStatus.getSelectedItem();
+
+            // Convert "Tất cả" to null for search
+            if ("Tất cả".equals(trangThai)) {
+                trangThai = null;
+            } else if (trangThai != null) {
+                // Convert display value to database value
+                trangThai = DISPLAY_TO_DB.get(trangThai);
+            }
+
+            LocalDate startDate = null;
+            LocalDate endDate = null;
+
+            if (!fromDate.isEmpty()) {
+                startDate = parseDate(fromDate);
+            }
+
+            if (!toDate.isEmpty()) {
+                endDate = parseDate(toDate);
+            }
+
+            // Perform search using the existing table data for client-side filtering
+            List<HoaDon> allInvoices = hoaDonController.getAllHoaDonWithDetails();
+            tableModelHoaDon.setRowCount(0);
+            int resultCount = 0;
+
+            for (HoaDon hd : allInvoices) {
+                boolean matches = true;
+
+                // Filter by invoice ID
+                if (!maHD.isEmpty()) {
+                    if (!String.valueOf(hd.getId()).contains(maHD)) {
+                        matches = false;
+                    }
+                }
+
+                // Filter by customer name
+                if (!khachHang.isEmpty() && matches) {
+                    String customerName = hd.getMaKH() != null ? hd.getMaKH().getHoTen() : "Khách lẻ";
+                    if (!customerName.toLowerCase().contains(khachHang.toLowerCase())) {
+                        matches = false;
+                    }
+                }
+
+                // Filter by employee name
+                if (!nhanVien.isEmpty() && matches) {
+                    String employeeName = hd.getMaNV() != null ? hd.getMaNV().getHoTen() : "";
+                    if (!employeeName.toLowerCase().contains(nhanVien.toLowerCase())) {
+                        matches = false;
+                    }
+                }
+
+                // Filter by date range
+                if (startDate != null && matches) {
+                    if (hd.getNgayLap().isBefore(startDate)) {
+                        matches = false;
+                    }
+                }
+
+                if (endDate != null && matches) {
+                    if (hd.getNgayLap().isAfter(endDate)) {
+                        matches = false;
+                    }
+                }
+
+                // Filter by payment status
+                if (trangThai != null && matches) {
+                    if (!trangThai.equals(hd.getTrangThaiThanhToan())) {
+                        matches = false;
+                    }
+                }
+
+                if (matches) {
+                    Object[] row = {
+                            hd.getId(),
+                            hd.getNgayLap().format(dateFormatter),
+                            hd.getMaKH() != null ? hd.getMaKH().getHoTen() : "Khách lẻ",
+                            hd.getMaNV() != null ? hd.getMaNV().getHoTen() : "N/A",
+                            String.format("%,.0f VNĐ", hd.getTongTien()),
+                            hd.getTotalItems()
+                    };
+                    tableModelHoaDon.addRow(row);
+                    resultCount++;
+                }
+            }
+
+            JOptionPane.showMessageDialog(this, "Tìm thấy " + resultCount + " kết quả phù hợp.");
+
+        } catch (DateTimeParseException ex) {
+            JOptionPane.showMessageDialog(this, "Định dạng ngày không hợp lệ! Vui lòng sử dụng dd/MM/yyyy", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi tìm kiếm: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void clearSearchFields() {
+        txtSearchMaHD.setText("");
+        txtSearchCustomer.setText("");
+        txtSearchEmployee.setText("");
+        txtSearchFromDate.setText("");
+        txtSearchToDate.setText("");
+        cboSearchPaymentStatus.setSelectedIndex(0);
+    }
+
+    // Rest of the methods remain the same...
     private void selectEmployeeDialog() {
         NhanVien employee = EmployeeSelectionDialog.showDialog(this);
         if (employee != null) {
             selectedEmployee = employee;
-
+            txtSelectedEmployee.setText(employee.getHoTen() + " - " + employee.getChucVu());
         }
     }
 
@@ -368,6 +616,7 @@ public class HoaDonUI extends JFrame {
         selectedCustomer = null;
         txtSelectedCustomer.setText("Khách lẻ");
     }
+
     private void addHoaDon() {
         try {
             LocalDate ngayLap = parseDate(txtNgayLap.getText().trim());
@@ -413,9 +662,10 @@ public class HoaDonUI extends JFrame {
 
             String selectedPaymentStatus = (String) cboTrangThaiThanhToan.getSelectedItem();
             if (selectedPaymentStatus != null) {
-                hd.setTrangThaiThanhToan(selectedPaymentStatus);
+                // Convert display value to database value
+                String dbValue = DISPLAY_TO_DB.get(selectedPaymentStatus);
+                hd.setTrangThaiThanhToan(dbValue != null ? dbValue : selectedPaymentStatus);
             }
-
 
             LocalDate ngayLap = parseDate(txtNgayLap.getText().trim());
 
@@ -465,7 +715,7 @@ public class HoaDonUI extends JFrame {
             }
 
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "M�� hóa đơn không hợp lệ!");
+            JOptionPane.showMessageDialog(this, "Mã hóa đơn không hợp lệ!");
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
         }
@@ -553,6 +803,7 @@ public class HoaDonUI extends JFrame {
             txtSelectedEmployee.setText("");
         }
         radioKhachLe.setSelected(true);
+        btnSelectCustomer.setVisible(false);
 
         tableHoaDon.clearSelection();
     }
@@ -576,15 +827,37 @@ public class HoaDonUI extends JFrame {
                         // Customer exists - set to "Hội viên"
                         radioHoiVien.setSelected(true);
                         btnSelectCustomer.setVisible(true);
-
                     } else {
                         txtSelectedCustomer.setText("Khách lẻ");
                         // No customer - set to "Khách lẻ"
                         radioKhachLe.setSelected(true);
                         btnSelectCustomer.setVisible(false);
                     }
-                    cboHinhThucThanhToan.setSelectedIndex(hd.getMaHTTT());
-                    cboTrangThaiThanhToan.setSelectedIndex(0);
+
+                    // Set payment method by ID
+                    if (hd.getMaHTTT() != null && hd.getMaHTTT() != 0) {
+                        // Find and select the payment method by ID
+                        for (int i = 0; i < cboHinhThucThanhToan.getItemCount(); i++) {
+                            HinhThucThanhToan item = cboHinhThucThanhToan.getItemAt(i);
+                            if (item != null && item.getMaHTTT() == hd.getMaHTTT().intValue()) {
+                                cboHinhThucThanhToan.setSelectedIndex(i);
+                                break;
+                            }
+                        }
+                    } else {
+                        cboHinhThucThanhToan.setSelectedIndex(0); // Select null option
+                    }
+
+                    // Set payment status by string value - convert from DB to display
+                    String trangThaiThanhToan = hd.getTrangThaiThanhToan();
+                    // Convert database value to display value
+                    String displayValue = DB_TO_DISPLAY.get(trangThaiThanhToan);
+                    if (displayValue != null && ((DefaultComboBoxModel<String>) cboTrangThaiThanhToan.getModel()).getIndexOf(displayValue) != -1) {
+                        cboTrangThaiThanhToan.setSelectedItem(displayValue);
+                    } else {
+                        cboTrangThaiThanhToan.setSelectedIndex(0);
+                    }
+
                     selectedEmployee = hd.getMaNV();
                     if (selectedEmployee != null) {
                         txtSelectedEmployee.setText(selectedEmployee.getHoTen() + " - " + selectedEmployee.getChucVu());
@@ -625,44 +898,44 @@ public class HoaDonUI extends JFrame {
             fileChooser.setSelectedFile(new File("HoaDon_" + hoaDonId + ".pdf"));
 
             int userSelection = fileChooser.showSaveDialog(this);
-            
+
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
                 String filePath = fileToSave.getAbsolutePath();
-                
+
                 // Ensure file has .pdf extension
                 if (!filePath.toLowerCase().endsWith(".pdf")) {
                     filePath += ".pdf";
                 }
-                
+
                 // Generate PDF
                 PDFInvoiceGenerator.generateInvoicePDF(hoaDon, filePath);
 
                 JOptionPane.showMessageDialog(this,
-                    "Đã in hóa đơn thành công!\nFile được lưu tại: " + filePath, 
-                    "Thành công", 
+                    "Đã in hóa đơn thành công!\nFile được lưu tại: " + filePath,
+                    "Thành công",
                     JOptionPane.INFORMATION_MESSAGE);
-                
+
                 // Ask if user wants to open the PDF
                 int openFile = JOptionPane.showConfirmDialog(this,
                     "Bạn có muốn mở file PDF vừa tạo không?",
                     "Mở file",
                     JOptionPane.YES_NO_OPTION);
-                
+
                 if (openFile == JOptionPane.YES_OPTION) {
                     try {
                         if (Desktop.isDesktopSupported()) {
                             Desktop.getDesktop().open(new File(filePath));
                         }
                     } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(this, 
-                            "Không thể mở file PDF. Vui lòng mở thủ công tại: " + filePath, 
-                            "Thông báo", 
+                        JOptionPane.showMessageDialog(this,
+                            "Không thể mở file PDF. Vui lòng mở thủ công tại: " + filePath,
+                            "Thông báo",
                             JOptionPane.INFORMATION_MESSAGE);
                     }
                 }
             }
-            
+
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Mã hóa đơn không hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
