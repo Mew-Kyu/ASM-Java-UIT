@@ -6,9 +6,13 @@ import util.RoleManager;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,15 +23,20 @@ public class NhaCungCapUI extends BaseAuthenticatedUI {
     private NhaCungCapDAO nhaCungCapDAO;
     private JTable table;
     private DefaultTableModel tableModel;
-    
+
     // Form components
     private JTextField txtTenNCC, txtDiaChi, txtDienThoai, txtEmail;
     private JTextField txtNguoiLienHe, txtChucVuLienHe, txtMoTa, txtGhiChu;
     private JSpinner spnRating;
     private JCheckBox chkTrangThai;
     
+    // Search components
+    private JTextField txtSearch;
+    private JComboBox<String> cmbSearchType;
+    private JButton btnSearch, btnClearSearch;
+
     private NhaCungCap selectedNhaCungCap;
-    
+
     public NhaCungCapUI() {
         super();
         if (!RoleManager.canAccessSupplierManagement()) {
@@ -67,72 +76,119 @@ public class NhaCungCapUI extends BaseAuthenticatedUI {
     private JPanel createFormPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createTitledBorder("Thông Tin Nhà Cung Cấp"));
+        panel.setBackground(Color.WHITE);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        
-        // Row 1
-        gbc.gridx = 0; gbc.gridy = 0;
-        panel.add(new JLabel("Tên NCC:"), gbc);
-        gbc.gridx = 1;
-        txtTenNCC = new JTextField(20);
+        gbc.insets = new Insets(8, 10, 8, 10);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        // Row 1 - Tên NCC và Điện thoại
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.0;
+        JLabel lblTenNCC = new JLabel("Tên nhà cung cấp:");
+        lblTenNCC.setFont(lblTenNCC.getFont().deriveFont(Font.BOLD, 12f));
+        panel.add(lblTenNCC, gbc);
+
+        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtTenNCC = new JTextField(25);
+        txtTenNCC.setPreferredSize(new Dimension(250, 28));
         panel.add(txtTenNCC, gbc);
         
-        gbc.gridx = 2;
-        panel.add(new JLabel("Điện thoại:"), gbc);
-        gbc.gridx = 3;
+        gbc.gridx = 2; gbc.weightx = 0.0; gbc.fill = GridBagConstraints.NONE;
+        gbc.insets = new Insets(8, 30, 8, 10);
+        JLabel lblDienThoai = new JLabel("Điện thoại:");
+        lblDienThoai.setFont(lblDienThoai.getFont().deriveFont(Font.BOLD, 12f));
+        panel.add(lblDienThoai, gbc);
+
+        gbc.gridx = 3; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(8, 10, 8, 10);
         txtDienThoai = new JTextField(15);
+        txtDienThoai.setPreferredSize(new Dimension(200, 28));
         panel.add(txtDienThoai, gbc);
         
-        // Row 2
-        gbc.gridx = 0; gbc.gridy = 1;
-        panel.add(new JLabel("Địa chỉ:"), gbc);
-        gbc.gridx = 1; gbc.gridwidth = 3;
-        txtDiaChi = new JTextField(40);
+        // Row 2 - Địa chỉ (full width)
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.0; gbc.fill = GridBagConstraints.NONE;
+        JLabel lblDiaChi = new JLabel("Địa chỉ:");
+        lblDiaChi.setFont(lblDiaChi.getFont().deriveFont(Font.BOLD, 12f));
+        panel.add(lblDiaChi, gbc);
+
+        gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtDiaChi = new JTextField();
+        txtDiaChi.setPreferredSize(new Dimension(0, 28));
         panel.add(txtDiaChi, gbc);
         
-        // Row 3
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 1;
-        panel.add(new JLabel("Email:"), gbc);
-        gbc.gridx = 1;
-        txtEmail = new JTextField(20);
+        // Row 3 - Email và Rating
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 1; gbc.weightx = 0.0; gbc.fill = GridBagConstraints.NONE;
+        JLabel lblEmail = new JLabel("Email:");
+        lblEmail.setFont(lblEmail.getFont().deriveFont(Font.BOLD, 12f));
+        panel.add(lblEmail, gbc);
+
+        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtEmail = new JTextField(25);
+        txtEmail.setPreferredSize(new Dimension(250, 28));
         panel.add(txtEmail, gbc);
         
-        gbc.gridx = 2;
-        panel.add(new JLabel("Rating:"), gbc);
-        gbc.gridx = 3;
+        gbc.gridx = 2; gbc.weightx = 0.0; gbc.fill = GridBagConstraints.NONE;
+        gbc.insets = new Insets(8, 30, 8, 10);
+        JLabel lblRating = new JLabel("Đánh giá (0-5):");
+        lblRating.setFont(lblRating.getFont().deriveFont(Font.BOLD, 12f));
+        panel.add(lblRating, gbc);
+
+        gbc.gridx = 3; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(8, 10, 8, 10);
         spnRating = new JSpinner(new SpinnerNumberModel(0, 0, 5, 1));
+        spnRating.setPreferredSize(new Dimension(200, 28));
         panel.add(spnRating, gbc);
         
-        // Row 4
-        gbc.gridx = 0; gbc.gridy = 3;
-        panel.add(new JLabel("Người liên hệ:"), gbc);
-        gbc.gridx = 1;
-        txtNguoiLienHe = new JTextField(20);
+        // Row 4 - Người liên hệ và Chức vụ
+        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0.0; gbc.fill = GridBagConstraints.NONE;
+        JLabel lblNguoiLienHe = new JLabel("Người liên hệ:");
+        lblNguoiLienHe.setFont(lblNguoiLienHe.getFont().deriveFont(Font.BOLD, 12f));
+        panel.add(lblNguoiLienHe, gbc);
+
+        gbc.gridx = 1; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtNguoiLienHe = new JTextField(25);
+        txtNguoiLienHe.setPreferredSize(new Dimension(250, 28));
         panel.add(txtNguoiLienHe, gbc);
         
-        gbc.gridx = 2;
-        panel.add(new JLabel("Chức vụ:"), gbc);
-        gbc.gridx = 3;
+        gbc.gridx = 2; gbc.weightx = 0.0; gbc.fill = GridBagConstraints.NONE;
+        gbc.insets = new Insets(8, 30, 8, 10);
+        JLabel lblChucVu = new JLabel("Chức vụ:");
+        lblChucVu.setFont(lblChucVu.getFont().deriveFont(Font.BOLD, 12f));
+        panel.add(lblChucVu, gbc);
+
+        gbc.gridx = 3; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(8, 10, 8, 10);
         txtChucVuLienHe = new JTextField(15);
+        txtChucVuLienHe.setPreferredSize(new Dimension(200, 28));
         panel.add(txtChucVuLienHe, gbc);
         
-        // Row 5
-        gbc.gridx = 0; gbc.gridy = 4;
-        panel.add(new JLabel("Mô tả:"), gbc);
-        gbc.gridx = 1; gbc.gridwidth = 3;
-        txtMoTa = new JTextField(40);
+        // Row 5 - Mô tả (full width)
+        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 1; gbc.weightx = 0.0; gbc.fill = GridBagConstraints.NONE;
+        JLabel lblMoTa = new JLabel("Mô tả:");
+        lblMoTa.setFont(lblMoTa.getFont().deriveFont(Font.BOLD, 12f));
+        panel.add(lblMoTa, gbc);
+
+        gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtMoTa = new JTextField();
+        txtMoTa.setPreferredSize(new Dimension(0, 28));
         panel.add(txtMoTa, gbc);
         
-        // Row 6
-        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 1;
-        panel.add(new JLabel("Ghi chú:"), gbc);
-        gbc.gridx = 1; gbc.gridwidth = 2;
-        txtGhiChu = new JTextField(30);
+        // Row 6 - Ghi chú và Trạng thái
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 1; gbc.weightx = 0.0; gbc.fill = GridBagConstraints.NONE;
+        JLabel lblGhiChu = new JLabel("Ghi chú:");
+        lblGhiChu.setFont(lblGhiChu.getFont().deriveFont(Font.BOLD, 12f));
+        panel.add(lblGhiChu, gbc);
+
+        gbc.gridx = 1; gbc.gridwidth = 2; gbc.weightx = 1.0; gbc.fill = GridBagConstraints.HORIZONTAL;
+        txtGhiChu = new JTextField();
+        txtGhiChu.setPreferredSize(new Dimension(0, 28));
         panel.add(txtGhiChu, gbc);
         
-        gbc.gridx = 3; gbc.gridwidth = 1;
+        gbc.gridx = 3; gbc.gridwidth = 1; gbc.weightx = 0.0; gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
         chkTrangThai = new JCheckBox("Đang hợp tác");
         chkTrangThai.setSelected(true);
+        chkTrangThai.setFont(chkTrangThai.getFont().deriveFont(Font.BOLD, 12f));
+        chkTrangThai.setBackground(Color.WHITE);
         panel.add(chkTrangThai, gbc);
         
         return panel;
@@ -160,12 +216,44 @@ public class NhaCungCapUI extends BaseAuthenticatedUI {
             }
         });
         
+        // Search functionality
+        txtSearch = new JTextField(20);
+        txtSearch.setPreferredSize(new Dimension(200, 28));
+        txtSearch.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    searchNhaCungCap(null);
+                }
+            }
+        });
+
+        cmbSearchType = new JComboBox<>(new String[] {"Tên nhà cung cấp", "Địa chỉ", "Điện thoại", "Email"});
+        cmbSearchType.setPreferredSize(new Dimension(150, 28));
+
+        btnSearch = new JButton("Tìm");
+        btnSearch.addActionListener(this::searchNhaCungCap);
+
+        btnClearSearch = new JButton("Xóa tìm kiếm");
+        btnClearSearch.addActionListener(e -> {
+            txtSearch.setText("");
+            loadData();
+        });
+
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.add(cmbSearchType);
+        searchPanel.add(txtSearch);
+        searchPanel.add(btnSearch);
+        searchPanel.add(btnClearSearch);
+
+        panel.add(searchPanel, BorderLayout.NORTH);
+
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
-        
+
         return panel;
     }
-    
+
     private JPanel createButtonPanel() {
         JPanel panel = new JPanel(new FlowLayout());
         
@@ -203,7 +291,7 @@ public class NhaCungCapUI extends BaseAuthenticatedUI {
         try {
             List<NhaCungCap> list = nhaCungCapDAO.findAll();
             tableModel.setRowCount(0);
-            
+
             for (NhaCungCap ncc : list) {
                 tableModel.addRow(new Object[]{
                     ncc.getMaNCC(),
@@ -332,27 +420,27 @@ public class NhaCungCapUI extends BaseAuthenticatedUI {
             selectedNhaCungCap.setTrangThai(chkTrangThai.isSelected());
             selectedNhaCungCap.setRating((Integer) spnRating.getValue());
             selectedNhaCungCap.setGhiChu(txtGhiChu.getText().trim());
-            
+
             nhaCungCapDAO.update(selectedNhaCungCap);
             showSuccess("Cập nhật nhà cung cấp thành công!");
             loadData();
-            
+
         } catch (Exception ex) {
             showError("Lỗi khi cập nhật nhà cung cấp: " + ex.getMessage());
         }
     }
-    
+
     private void xoaNhaCungCap(ActionEvent e) {
         if (!RoleManager.canDeleteSuppliers()) {
             RoleManager.showAccessDeniedMessage(this, "Xóa nhà cung cấp", "Admin");
             return;
         }
-        
+
         if (selectedNhaCungCap == null) {
             showError("Vui lòng chọn nhà cung cấp cần xóa!");
             return;
         }
-        
+
         int option = JOptionPane.showConfirmDialog(this,
                 "Bạn có chắc chắn muốn xóa nhà cung cấp: " + selectedNhaCungCap.getTenNCC() + "?",
                 "Xác nhận xóa",
@@ -369,11 +457,108 @@ public class NhaCungCapUI extends BaseAuthenticatedUI {
             }
         }
     }
-    
+
+    private void filterTable(String searchText) {
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel);
+        table.setRowSorter(sorter);
+
+        if (searchText.trim().isEmpty()) {
+            sorter.setRowFilter(null);
+        } else {
+            int selectedIndex = cmbSearchType.getSelectedIndex();
+            switch (selectedIndex) {
+                case 0: // Tên nhà cung cấp
+                    sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchText, 1));
+                    break;
+                case 1: // Địa chỉ
+                    sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchText, 2));
+                    break;
+                case 2: // Điện thoại
+                    sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchText, 3));
+                    break;
+                case 3: // Email
+                    sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchText, 4));
+                    break;
+                default:
+                    sorter.setRowFilter(null);
+            }
+        }
+    }
+
+    private void searchNhaCungCap(ActionEvent e) {
+        String searchText = txtSearch.getText().trim();
+        if (searchText.isEmpty()) {
+            showError("Vui lòng nhập từ khóa tìm kiếm!");
+            return;
+        }
+
+        try {
+            List<NhaCungCap> resultList = new ArrayList<>();
+            List<NhaCungCap> allSuppliers = nhaCungCapDAO.findAll();
+            int selectedIndex = cmbSearchType.getSelectedIndex();
+
+            switch (selectedIndex) {
+                case 0: // Tên nhà cung cấp
+                    for (NhaCungCap ncc : allSuppliers) {
+                        if (ncc.getTenNCC() != null && ncc.getTenNCC().toLowerCase().contains(searchText.toLowerCase())) {
+                            resultList.add(ncc);
+                        }
+                    }
+                    break;
+                case 1: // Địa chỉ
+                    for (NhaCungCap ncc : allSuppliers) {
+                        if (ncc.getDiaChi() != null && ncc.getDiaChi().toLowerCase().contains(searchText.toLowerCase())) {
+                            resultList.add(ncc);
+                        }
+                    }
+                    break;
+                case 2: // Điện thoại
+                    for (NhaCungCap ncc : allSuppliers) {
+                        if (ncc.getDienThoai() != null && ncc.getDienThoai().contains(searchText)) {
+                            resultList.add(ncc);
+                        }
+                    }
+                    break;
+                case 3: // Email
+                    for (NhaCungCap ncc : allSuppliers) {
+                        if (ncc.getEmail() != null && ncc.getEmail().toLowerCase().contains(searchText.toLowerCase())) {
+                            resultList.add(ncc);
+                        }
+                    }
+                    break;
+                default:
+                    showError("Chọn loại tìm kiếm hợp lệ!");
+                    return;
+            }
+
+            tableModel.setRowCount(0);
+            for (NhaCungCap ncc : resultList) {
+                tableModel.addRow(new Object[]{
+                    ncc.getMaNCC(),
+                    ncc.getTenNCC(),
+                    ncc.getDiaChi(),
+                    ncc.getDienThoai(),
+                    ncc.getEmail(),
+                    ncc.getNguoiLienHe(),
+                    ncc.getRating(),
+                    ncc.isTrangThai() ? "Đang hợp tác" : "Ngừng hợp tác",
+                    String.format("%,.0f VNĐ", ncc.getTongGiaTriMua()),
+                    ncc.getSoDonHang()
+                });
+            }
+
+            if (resultList.isEmpty()) {
+                showError("Không tìm thấy nhà cung cấp nào khớp với từ khóa tìm kiếm!");
+            }
+        } catch (Exception ex) {
+            showError("Lỗi khi tìm kiếm nhà cung cấp: " + ex.getMessage());
+        }
+    }
+
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message, "Lỗi", JOptionPane.ERROR_MESSAGE);
     }
-    
+
     private void showSuccess(String message) {
         JOptionPane.showMessageDialog(this, message, "Thành công", JOptionPane.INFORMATION_MESSAGE);
     }

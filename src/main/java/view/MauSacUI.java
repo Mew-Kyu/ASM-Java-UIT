@@ -44,23 +44,17 @@ public class MauSacUI extends JFrame {
     }
 
     private void initComponents() {
-        JPanel panel = new JPanel(new BorderLayout());
-        tableModel = new DefaultTableModel(new Object[]{"Mã Màu", "Tên Màu"}, 0);
-        table = new JTable(tableModel);
-        JScrollPane scrollPane = new JScrollPane(table);
-        panel.add(scrollPane, BorderLayout.CENTER);
-
-        JPanel inputPanel = new JPanel(new GridLayout(2, 2));
-        inputPanel.add(new JLabel("Mã Màu:"));
+        JPanel panelTop = new JPanel(new GridLayout(2, 2, 10, 10));
+        panelTop.setBorder(BorderFactory.createTitledBorder("Thông tin Màu Sắc"));
+        panelTop.add(new JLabel("Mã Màu:"));
         txtId = new JTextField();
-        txtId.setEnabled(false);
-        inputPanel.add(txtId);
-        inputPanel.add(new JLabel("Tên Màu:"));
+        txtId.setEditable(false);
+        panelTop.add(txtId);
+        panelTop.add(new JLabel("Tên Màu:"));
         txtTenMau = new JTextField();
-        inputPanel.add(txtTenMau);
-        panel.add(inputPanel, BorderLayout.NORTH);
+        panelTop.add(txtTenMau);
 
-        JPanel buttonPanel = new JPanel();
+        JPanel panelButtons = new JPanel();
         btnAdd = new JButton("Thêm");
         btnAdd.setPreferredSize(new Dimension(80, 30));
         btnUpdate = new JButton("Sửa");
@@ -69,13 +63,21 @@ public class MauSacUI extends JFrame {
         btnDelete.setPreferredSize(new Dimension(80, 30));
         btnRefresh = new JButton("Làm mới");
         btnRefresh.setPreferredSize(new Dimension(100, 30));
-        buttonPanel.add(btnAdd);
-        buttonPanel.add(btnUpdate);
-        buttonPanel.add(btnDelete);
-        buttonPanel.add(btnRefresh);
-        panel.add(buttonPanel, BorderLayout.SOUTH);
+        panelButtons.add(btnAdd);
+        panelButtons.add(btnUpdate);
+        panelButtons.add(btnDelete);
+        panelButtons.add(btnRefresh);
 
-        add(panel);
+        tableModel = new DefaultTableModel(new Object[]{"Mã Màu", "Tên Màu"}, 0) {
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        table = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(table);
+
+        setLayout(new BorderLayout(10, 10));
+        add(panelTop, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
+        add(panelButtons, BorderLayout.SOUTH);
 
         btnAdd.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
