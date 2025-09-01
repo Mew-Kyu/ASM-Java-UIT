@@ -186,8 +186,17 @@ public class NhanVienUI extends JFrame {
         dateChooserNgaySinh.setDateFormatString("yyyy-MM-dd");
         dateChooserNgaySinh.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(173, 216, 230)),
-            BorderFactory.createEmptyBorder(2, 5, 2, 5)
+            BorderFactory.createEmptyBorder(0, 0, 0, 0)
         ));
+        java.awt.Component editorComp = dateChooserNgaySinh.getDateEditor().getUiComponent();
+        if (editorComp instanceof JComponent) {
+            JComponent editor = (JComponent) editorComp;
+            editor.setBorder(BorderFactory.createEmptyBorder(5, 8, 5, 8));
+            editor.setBackground(Color.WHITE);
+            if (editor instanceof JTextField) {
+                ((JTextField) editor).setFont(new Font("SansSerif", Font.PLAIN, 12));
+            }
+        }
         dateChooserNgaySinh.setFont(new Font("SansSerif", Font.PLAIN, 12));
         dateChooserNgaySinh.setToolTipText("Chọn ngày sinh (bắt buộc)");
         dateChooserNgaySinh.setPreferredSize(new Dimension(140, 30));

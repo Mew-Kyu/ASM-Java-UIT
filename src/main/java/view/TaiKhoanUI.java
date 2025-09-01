@@ -22,12 +22,11 @@ public class TaiKhoanUI extends JFrame {
     private JComboBox<String> cmbQuyen;
     private JPasswordField txtMatKhau;
     private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnClear;
-    // Add search components
     private JTextField txtSearch;
     private JButton btnSearch, btnClearSearch;
     private String selectedUsername = null;
     private boolean isUpdating = false;
-    private List<TaiKhoan> allAccounts; // Store all accounts for filtering
+    private List<TaiKhoan> allAccounts;
 
     public TaiKhoanUI() {
         // Check authentication and authorization
