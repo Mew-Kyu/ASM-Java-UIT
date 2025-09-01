@@ -87,7 +87,7 @@ The application follows **Clean Architecture** principles with clear separation 
                                   ▼
 ┌─────────────────────────────────────────────────────────┐
 │                      Domain Layer                       │
-│  ┌─────────────────────────────────────────────────────┐ │
+│  ┌──────���──────────────────────────────────────────────┐ │
 │  │              JPA Entities (Domain Models)           │ │
 │  │   SanPham │ TaiKhoan │ NhanVien │ HoaDon │ etc.    │ │
 │  └─────────────────────────────────────────────────────┘ │
@@ -462,7 +462,6 @@ src/main/java/
 │   ├── PhieuDoiTraDetailUI.java        # 🔍 Return detail view
 │   ├── PhieuDoiTraFormUI.java          # 📝 Return form interface
 │   ├── PhieuDoiTraCompleteUI.java      # ✅ Return completion interface
-│   ├── PhieuDoiTraUINew.java           # 🆕 Enhanced return interface
 │   └── DoiTraWorkflowDiagram.java      # 📊 Return workflow visualization
 ├── 📊 model/
 │   ├── SanPham.java                    # 🏪 Product entity
@@ -967,12 +966,58 @@ DonDatHang (
 - **Role-Based UI**: Different interfaces for different user roles
 - **Consistent Styling**: Uniform look and feel across all screens
 
+### 🔑 Modern Login UI (Enhanced)
+A redesigned, user-friendly authentication screen delivering fast feedback, accessibility, and security.
+
+**Visual & UX Enhancements**
+- Gradient header + soft shadow “card” layout
+- Rounded inputs with focus accent + subtle placeholders
+- Inline icons (👤 user, 🔒 lock, 👁 show/hide password)
+- Progress indicator during async authentication (non-blocking UI)
+- Shake animation & audible beep on failures
+- Inline caps lock warning (⚠ CAPS LOCK đang bật)
+
+**Productivity Shortcuts**
+| Action | Shortcut | Description |
+|--------|----------|-------------|
+| Submit login | Enter | When focus in user or password field |
+| Clear form | ESC | Resets all fields |
+| Quick clear | Ctrl+L | Clears & focuses username |
+| Toggle password visibility | F2 / Checkbox / Eye icon | Shows / hides password |
+
+**Security & Feedback**
+- Brute-force mitigation: temporary 5s lockout after 5 failed attempts (counter resets on success)
+- Inline validation (empty username, empty password, short password)
+- Password hidden by default; secure echo char restored after toggle
+- Remember Me (stores username only via java.util.prefs; optional & revocable)
+
+**Accessibility & Usability**
+- High-contrast focus borders & error colors
+- Placeholder text disappears on focus for clarity
+- Keyboard-only friendly (no mouse required for full flow)
+- Consistent font stack (Segoe UI / system fallback)
+
+**Async Architecture**
+- Uses SwingWorker to avoid EDT blocking during credential verification
+- Progress bar + stateful button label (“Đang xử lý…”) while authenticating
+
+**State Flow Summary**
+```
+Idle → Validate Inputs → Async Login → (Success ➜ Session + Transition) | (Fail ➜ Error + Retry / Optional Lockout)
+```
+
+**Extensibility Hooks (Suggested Future Add‑ons)**
+- Dark mode toggle
+- Password strength meter (zxcvbn / entropy estimation)
+- Multi-factor prompt (TOTP / email code)
+- Internationalization of labels & messages
+
 ### **🔐 Authentication Flow**
 ```
 Login Screen → Role Verification → Main Dashboard → Feature Access
 ```
 
-### **👥 Role-Based Features**
+### **�� Role-Based Features**
 
 | Role | Product Mgmt | Employee Mgmt | Account Mgmt | Sales | Reports |
 |------|--------------|---------------|--------------|-------|---------|
@@ -1213,7 +1258,7 @@ The system comes with pre-configured accounts for testing:
 
 2. **Colors and Sizes**: Set up variants
    - Colors: Main Menu → Quản Lý Màu Sắc
-   - Sizes: Main Menu → Quản Lý Kích Thước
+   - Sizes: Main Menu → Qu���n Lý Kích Thước
 
 3. **Add Products**: Create base products
    - Navigate: Main Menu → Quản Lý Sản Phẩm
@@ -1266,7 +1311,7 @@ The system comes with pre-configured accounts for testing:
 
 #### **Creating Loyalty Cards**
 1. **Navigate**: Main Menu → Khách Hàng Thân Thiết
-2. **New Card**: Click "Tạo Thẻ Mới"
+2. **New Card**: Click "Tạo Th�� Mới"
 3. **Customer Selection**: Choose existing customer
 4. **Card Generation**: System generates unique card number
 5. **Initial Tier**: Starts at BRONZE level
@@ -1311,14 +1356,32 @@ The system comes with pre-configured accounts for testing:
 - **STAFF**: Sales operations, customer service, limited access
 
 #### **Data Backup**
-- **Database Backup**: Regular SQL Server backups recommended
-- **Export Data**: Use reporting features to export critical data
-- **System Logs**: Monitor application logs for issues
+```sql
+-- Daily full backup
+BACKUP DATABASE QuanLyCuaHangQuanAo_Prod
+TO DISK = 'C:\Backups\QLCH_Full_YYYYMMDD.bak'
+WITH COMPRESSION, CHECKSUM;
 
-#### **Performance Monitoring**
-- **Database Health**: Use `main.Health` class to test connections
-- **Session Management**: Monitor active user sessions
-- **Error Tracking**: Review application logs for errors
+-- Hourly transaction log backup
+BACKUP LOG QuanLyCuaHangQuanAo_Prod
+TO DISK = 'C:\Backups\QLCH_Log_YYYYMMDD_HH.trn';
+```
+
+### **Monitoring & Maintenance**
+
+#### **Application Monitoring**
+- **Log Monitoring**: Monitor application logs for errors
+- **Performance Metrics**: Track response times and throughput
+- **Database Monitoring**: Monitor SQL Server performance
+- **Disk Space**: Monitor storage usage
+- **Memory Usage**: Track JVM memory consumption
+
+#### **Regular Maintenance Tasks**
+- **Database Maintenance**: Update statistics, rebuild indexes
+- **Log Cleanup**: Archive and clean old log files
+- **Security Updates**: Apply Java and SQL Server updates
+- **Backup Verification**: Test backup restoration procedures
+- **Performance Tuning**: Optimize slow queries and operations
 
 ## 🧪 Testing
 
@@ -1716,4 +1779,3 @@ The **Quản Lý Cửa Hàng Quần Áo** system represents a comprehensive, ent
 - 🔮 **E-commerce Integration**: Online store connectivity
 
 **Happy Coding! 🚀**
-

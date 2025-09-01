@@ -19,7 +19,7 @@ public class LoginUI extends JFrame {
     public LoginUI() {
         controller = new TaiKhoanController();
         setTitle("Đăng Nhập - Quản Lý Cửa Hàng Quần Áo");
-        setSize(400, 280);
+        setSize(420, 280);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
