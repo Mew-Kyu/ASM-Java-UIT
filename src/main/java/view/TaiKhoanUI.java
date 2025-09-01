@@ -2,31 +2,41 @@ package view;
 
 import controller.TaiKhoanController;
 import model.TaiKhoan;
+import model.NhanVien;
 import util.SessionManager;
 import util.RoleManager;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TaiKhoanUI extends JFrame {
     private TaiKhoanController controller;
     private JTable table;
     private DefaultTableModel tableModel;
-    private JTextField txtTenDangNhap, txtMaNV;
-    private JComboBox<String> cmbQuyen;
+    private JTextField txtTenDangNhap;
     private JPasswordField txtMatKhau;
+    private JTextField txtMaNV;
+    private JButton btnSelectNhanVien;
+    private JComboBox<String> cmbQuyen;
     private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnClear;
     private JTextField txtSearch;
     private JButton btnSearch, btnClearSearch;
     private String selectedUsername = null;
     private boolean isUpdating = false;
     private List<TaiKhoan> allAccounts;
+    private List<TaiKhoan> filteredAccounts;
+    private NhanVien selectedNhanVien = null;
+    // Pagination fields
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalPages = 1;
+    private JLabel lblPageInfo;
+    private JButton btnFirstPage, btnPrevPage, btnNextPage, btnLastPage;
+    private JComboBox<Integer> cmbPageSize;
 
     public TaiKhoanUI() {
         // Check authentication and authorization
@@ -45,10 +55,10 @@ public class TaiKhoanUI extends JFrame {
 
         controller = new TaiKhoanController();
         setTitle("Quản Lý Tài Khoản - " + SessionManager.getInstance().getCurrentUsername());
-        setSize(800, 500);
+        setSize(600, 560); // increased height for pagination bar
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
-        setResizable(false); // Prevent window resizing/zooming
+        setResizable(false);
         initComponents();
         loadTable();
 
@@ -70,7 +80,7 @@ public class TaiKhoanUI extends JFrame {
 
         searchPanel.add(new JLabel("Tìm kiếm:"));
         txtSearch = new JTextField(20);
-        txtSearch.setToolTipText("Tìm theo tên đăng nhập, mã NV hoặc quyền");
+        txtSearch.setToolTipText("Tìm theo tên đăng nhập, tên nhân viên hoặc quyền"); // updated tooltip
         searchPanel.add(txtSearch);
 
         btnSearch = new JButton("Tìm");
@@ -85,7 +95,7 @@ public class TaiKhoanUI extends JFrame {
 
         // Table panel
         JPanel tablePanel = new JPanel(new BorderLayout());
-        tableModel = new DefaultTableModel(new Object[]{"Tên Đăng Nhập", "Mã NV", "Quyền"}, 0) {
+        tableModel = new DefaultTableModel(new Object[]{"Tên Đăng Nhập", "Nhân Viên", "Quyền"}, 0) { // column header changed
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false; // Make table non-editable
@@ -96,6 +106,8 @@ public class TaiKhoanUI extends JFrame {
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setPreferredSize(new Dimension(0, 200));
         tablePanel.add(scrollPane, BorderLayout.CENTER);
+        // Pagination bar below table
+        tablePanel.add(createPaginationBar(), BorderLayout.SOUTH);
         panel.add(tablePanel, BorderLayout.CENTER);
 
         // Form panel
@@ -128,17 +140,24 @@ public class TaiKhoanUI extends JFrame {
         txtMatKhau.setToolTipText("Để trống nếu không muốn thay đổi mật khẩu (khi cập nhật)");
         formPanel.add(txtMatKhau, gbc);
 
-        // Employee ID
+        // Employee (selection instead of manual ID)
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
-        formPanel.add(new JLabel("Mã NV:"), gbc);
+        formPanel.add(new JLabel("Nhân Viên:"), gbc);
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
+        JPanel employeeSelectPanel = new JPanel(new BorderLayout(5, 0));
         txtMaNV = new JTextField(20);
-        formPanel.add(txtMaNV, gbc);
+        txtMaNV.setEditable(false); // make read-only
+        txtMaNV.setToolTipText("Chọn nhân viên bằng nút bên cạnh");
+        btnSelectNhanVien = new JButton("Chọn");
+        btnSelectNhanVien.setPreferredSize(new Dimension(70, txtMaNV.getPreferredSize().height));
+        employeeSelectPanel.add(txtMaNV, BorderLayout.CENTER);
+        employeeSelectPanel.add(btnSelectNhanVien, BorderLayout.EAST);
+        formPanel.add(employeeSelectPanel, gbc);
 
         // Role
         gbc.gridx = 0;
@@ -182,6 +201,43 @@ public class TaiKhoanUI extends JFrame {
 
         // Add action listeners
         setupEventHandlers();
+    }
+
+    private JPanel createPaginationBar() {
+        JPanel paginationPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 1));
+        btnFirstPage = new JButton("|<");
+        btnPrevPage = new JButton("<");
+        btnNextPage = new JButton(">");
+        btnLastPage = new JButton(">|");
+        // Further shrink pagination buttons
+        Dimension tinyBtnSize = new Dimension(32, 20);
+        Insets tinyInsets = new Insets(0, 4, 0, 4);
+        JButton[] navButtons = {btnFirstPage, btnPrevPage, btnNextPage, btnLastPage};
+        for (JButton b : navButtons) {
+            b.setPreferredSize(tinyBtnSize);
+            b.setMinimumSize(tinyBtnSize);
+            b.setMargin(tinyInsets);
+            b.setFont(b.getFont().deriveFont(Font.PLAIN, 10f));
+        }
+        lblPageInfo = new JLabel("Trang 1/1");
+        lblPageInfo.setFont(lblPageInfo.getFont().deriveFont(Font.PLAIN, 10f));
+        cmbPageSize = new JComboBox<>(new Integer[]{5, 10, 20, 50});
+        cmbPageSize.setSelectedItem(10);
+        cmbPageSize.setFont(cmbPageSize.getFont().deriveFont(Font.PLAIN, 10f));
+        cmbPageSize.setPreferredSize(new Dimension(50, 20));
+        JLabel lblShow = new JLabel("Hiển thị:");
+        lblShow.setFont(lblShow.getFont().deriveFont(Font.PLAIN, 10f));
+        JLabel lblPerPage = new JLabel("/ trang");
+        lblPerPage.setFont(lblPerPage.getFont().deriveFont(Font.PLAIN, 10f));
+        paginationPanel.add(lblShow);
+        paginationPanel.add(cmbPageSize);
+        paginationPanel.add(lblPerPage);
+        paginationPanel.add(btnFirstPage);
+        paginationPanel.add(btnPrevPage);
+        paginationPanel.add(lblPageInfo);
+        paginationPanel.add(btnNextPage);
+        paginationPanel.add(btnLastPage);
+        return paginationPanel;
     }
 
     private void setupEventHandlers() {
@@ -236,6 +292,15 @@ public class TaiKhoanUI extends JFrame {
             }
         });
 
+        // Select employee button
+        btnSelectNhanVien.addActionListener(e -> {
+            NhanVien nv = EmployeeSelectionDialog.showDialog(this);
+            if (nv != null) {
+                selectedNhanVien = nv;
+                txtMaNV.setText(nv.getHoTen() + " (" + nv.getId() + ")");
+            }
+        });
+
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int row = table.getSelectedRow();
@@ -244,63 +309,104 @@ public class TaiKhoanUI extends JFrame {
                     selectedUsername = tableModel.getValueAt(row, 0).toString();
                     txtTenDangNhap.setText(selectedUsername);
                     txtMatKhau.setText(""); // Clear password field - don't show hashed password
-                    txtMaNV.setText(tableModel.getValueAt(row, 1).toString());
+                    // Find TaiKhoan object in cache to set selectedNhanVien
+                    TaiKhoan tk = findAccountByUsername(selectedUsername);
+                    if (tk != null && tk.getMaNV() != null) {
+                        selectedNhanVien = tk.getMaNV();
+                        txtMaNV.setText(selectedNhanVien.getHoTen() + " (" + selectedNhanVien.getId() + ")");
+                    } else {
+                        selectedNhanVien = null;
+                        txtMaNV.setText("");
+                    }
                     cmbQuyen.setSelectedItem(tableModel.getValueAt(row, 2).toString());
                 } else {
                     isUpdating = false;
                 }
             }
         });
+
+        // Pagination listeners
+        btnFirstPage.addActionListener(e -> { currentPage = 1; refreshTablePage(); });
+        btnPrevPage.addActionListener(e -> { if(currentPage>1){ currentPage--; refreshTablePage(); } });
+        btnNextPage.addActionListener(e -> { if(currentPage<totalPages){ currentPage++; refreshTablePage(); } });
+        btnLastPage.addActionListener(e -> { currentPage = totalPages; refreshTablePage(); });
+        cmbPageSize.addActionListener(e -> { Integer sel = (Integer)cmbPageSize.getSelectedItem(); if(sel!=null && sel!=pageSize){ pageSize = sel; currentPage = 1; refreshTablePage(); } });
     }
 
-    // Add search methods
+    private TaiKhoan findAccountByUsername(String username) {
+        if (allAccounts == null) return null;
+        for (TaiKhoan tk : allAccounts) {
+            if (tk.getTenDangNhap().equals(username)) return tk;
+        }
+        return null;
+    }
+
     private void performSearch() {
         String searchText = txtSearch.getText().trim().toLowerCase();
         if (searchText.isEmpty()) {
-            loadTable(); // Show all records if search is empty
-            return;
-        }
-
-        tableModel.setRowCount(0);
-        try {
-            if (allAccounts == null) {
-                allAccounts = controller.getAllTaiKhoan();
-            }
-
+            // Reset to full list
+            filteredAccounts = new ArrayList<>(allAccounts != null ? allAccounts : new ArrayList<>());
+        } else {
+            if (allAccounts == null) allAccounts = controller.getAllTaiKhoan();
+            filteredAccounts = new ArrayList<>();
             for (TaiKhoan tk : allAccounts) {
                 String username = tk.getTenDangNhap().toLowerCase();
-                String employeeId = tk.getMaNV() != null ? tk.getMaNV().getId().toString() : "";
+                String employeeName = tk.getMaNV() != null ? tk.getMaNV().getHoTen().toLowerCase() : "";
                 String role = tk.getQuyen().toLowerCase();
-
-                // Check if any field contains the search text
-                if (username.contains(searchText) ||
-                        employeeId.contains(searchText) ||
-                        role.contains(searchText)) {
-
-                    tableModel.addRow(new Object[]{
-                            tk.getTenDangNhap(),
-                            tk.getMaNV() != null ? tk.getMaNV().getId() : "N/A",
-                            tk.getQuyen()
-                    });
+                if (username.contains(searchText) || employeeName.contains(searchText) || role.contains(searchText)) {
+                    filteredAccounts.add(tk);
                 }
             }
-
-            if (tableModel.getRowCount() == 0) {
-                JOptionPane.showMessageDialog(this,
-                        "Không tìm thấy tài khoản nào phù hợp với từ khóa: " + txtSearch.getText(),
-                        "Kết quả tìm kiếm",
-                        JOptionPane.INFORMATION_MESSAGE);
+            if (filteredAccounts.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy tài khoản nào phù hợp với từ khóa: " + txtSearch.getText(), "Kết quả tìm kiếm", JOptionPane.INFORMATION_MESSAGE);
             }
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Lỗi khi tìm kiếm: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
+        currentPage = 1;
+        recalcTotalPages();
+        refreshTablePage();
     }
 
     private void clearSearch() {
         txtSearch.setText("");
-        loadTable(); // Reload all data
+        filteredAccounts = new ArrayList<>(allAccounts != null ? allAccounts : new ArrayList<>());
+        currentPage = 1;
+        recalcTotalPages();
+        refreshTablePage();
         clearForm();
+    }
+
+    private void recalcTotalPages() {
+        int totalRecords = filteredAccounts != null ? filteredAccounts.size() : 0;
+        totalPages = totalRecords == 0 ? 1 : (int) Math.ceil(totalRecords / (double) pageSize);
+        if (currentPage > totalPages) currentPage = totalPages;
+    }
+
+    private void refreshTablePage() {
+        tableModel.setRowCount(0);
+        if (filteredAccounts == null) {
+            filteredAccounts = new ArrayList<>();
+        }
+        int totalRecords = filteredAccounts.size();
+        if (totalRecords == 0) {
+            lblPageInfo.setText("Trang 0/0");
+            return;
+        }
+        int startIndex = (currentPage - 1) * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, totalRecords);
+        for (int i = startIndex; i < endIndex; i++) {
+            TaiKhoan tk = filteredAccounts.get(i);
+            tableModel.addRow(new Object[]{ tk.getTenDangNhap(), tk.getMaNV() != null ? tk.getMaNV().getHoTen() : "N/A", tk.getQuyen() });
+        }
+        lblPageInfo.setText("Trang " + currentPage + "/" + totalPages + " (" + totalRecords + " mục)");
+        updatePaginationButtonsState();
+    }
+
+    private void updatePaginationButtonsState() {
+        boolean hasData = filteredAccounts != null && !filteredAccounts.isEmpty();
+        btnFirstPage.setEnabled(hasData && currentPage > 1);
+        btnPrevPage.setEnabled(hasData && currentPage > 1);
+        btnNextPage.setEnabled(hasData && currentPage < totalPages);
+        btnLastPage.setEnabled(hasData && currentPage < totalPages);
     }
 
     private void addTaiKhoan() {
@@ -383,8 +489,8 @@ public class TaiKhoanUI extends JFrame {
             return false;
         }
 
-        if (txtMaNV.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập mã nhân viên!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        if (selectedNhanVien == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
@@ -396,11 +502,7 @@ public class TaiKhoanUI extends JFrame {
         tk.setTenDangNhap(txtTenDangNhap.getText().trim());
         tk.setMatKhau(new String(txtMatKhau.getPassword()).trim());
         tk.setQuyen(cmbQuyen.getSelectedItem().toString());
-
-        // Get employee by ID
-        String maNV = txtMaNV.getText().trim();
-        tk.setMaNV(controller.getNhanVienById(maNV));
-
+        tk.setMaNV(selectedNhanVien); // set selected employee
         return tk;
     }
 
@@ -410,23 +512,22 @@ public class TaiKhoanUI extends JFrame {
         txtMaNV.setText("");
         cmbQuyen.setSelectedIndex(0);
         selectedUsername = null;
+        selectedNhanVien = null;
         isUpdating = false;
         table.clearSelection();
     }
 
     private void loadTable() {
-        tableModel.setRowCount(0);
         try {
-            allAccounts = controller.getAllTaiKhoan(); // Store for search functionality
-            for (TaiKhoan tk : allAccounts) {
-                tableModel.addRow(new Object[]{
-                        tk.getTenDangNhap(),
-                        tk.getMaNV() != null ? tk.getMaNV().getId() : "N/A",
-                        tk.getQuyen()
-                });
-            }
+            allAccounts = controller.getAllTaiKhoan();
+            filteredAccounts = new ArrayList<>(allAccounts);
         } catch (Exception e) {
+            allAccounts = new ArrayList<>();
+            filteredAccounts = new ArrayList<>();
             JOptionPane.showMessageDialog(this, "Lỗi khi tải dữ liệu: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
+        currentPage = 1;
+        recalcTotalPages();
+        refreshTablePage();
     }
 }
