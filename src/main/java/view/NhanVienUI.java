@@ -50,7 +50,7 @@ public class NhanVienUI extends JFrame {
 
         controller = new NhanVienController();
         setTitle("Quản Lý Nhân Viên - " + SessionManager.getInstance().getCurrentUsername());
-        setSize(800, 550);
+        setSize(800, 650);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         initComponents();

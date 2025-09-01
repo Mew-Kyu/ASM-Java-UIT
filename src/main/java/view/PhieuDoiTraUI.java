@@ -14,6 +14,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,6 +32,15 @@ public class PhieuDoiTraUI extends JFrame {
     private JComboBox<String> cmbLoaiPhieu;
     private JTextField txtTimKiem;
     
+    private List<PhieuDoiTra> allPhieuDoiTra = new ArrayList<>();
+    private List<PhieuDoiTra> filteredPhieuDoiTra = new ArrayList<>();
+    private int currentPage = 1;
+    private int pageSize = 30;
+    private int totalPages = 1;
+    private JLabel lblPageInfo;
+    private JButton btnFirstPage, btnPrevPage, btnNextPage, btnLastPage;
+    private JComboBox<Integer> cboPageSize;
+
     public PhieuDoiTraUI() {
         this.phieuDoiTraDAO = new PhieuDoiTraDAO();
         this.phieuDoiTraService = new PhieuDoiTraServiceImpl();
@@ -159,7 +169,32 @@ public class PhieuDoiTraUI extends JFrame {
         
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);
-        
+
+        // Pagination controls
+        JPanel paginationPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 5));
+        btnFirstPage = new JButton("|<");
+        btnPrevPage = new JButton("<");
+        btnNextPage = new JButton(">");
+        btnLastPage = new JButton(">|");
+        lblPageInfo = new JLabel("Page 1/1 (0 records)");
+        cboPageSize = new JComboBox<>(new Integer[]{10,30,50,100});
+        cboPageSize.setSelectedItem(30);
+        paginationPanel.add(new JLabel("Rows:"));
+        paginationPanel.add(cboPageSize);
+        paginationPanel.add(btnFirstPage);
+        paginationPanel.add(btnPrevPage);
+        paginationPanel.add(lblPageInfo);
+        paginationPanel.add(btnNextPage);
+        paginationPanel.add(btnLastPage);
+        panel.add(paginationPanel, BorderLayout.SOUTH);
+
+        // Pagination listeners
+        btnFirstPage.addActionListener(e -> { if(currentPage!=1){currentPage=1; renderCurrentPage();}});
+        btnPrevPage.addActionListener(e -> { if(currentPage>1){currentPage--; renderCurrentPage();}});
+        btnNextPage.addActionListener(e -> { if(currentPage< totalPages){currentPage++; renderCurrentPage();}});
+        btnLastPage.addActionListener(e -> { if(currentPage!= totalPages){currentPage= totalPages; renderCurrentPage();}});
+        cboPageSize.addActionListener(e -> { Integer sel=(Integer)cboPageSize.getSelectedItem(); if(sel!=null && sel!=pageSize){pageSize=sel; currentPage=1; recalcPagination(); renderCurrentPage();}});
+
         return panel;
     }
     
@@ -240,8 +275,11 @@ public class PhieuDoiTraUI extends JFrame {
     
     private void loadData() {
         try {
-            List<PhieuDoiTra> list = phieuDoiTraDAO.findAll();
-            displayData(list);
+            allPhieuDoiTra = phieuDoiTraDAO.findAll();
+            filteredPhieuDoiTra = new ArrayList<>(allPhieuDoiTra);
+            currentPage = 1;
+            recalcPagination();
+            renderCurrentPage();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi tải dữ liệu: " + e.getMessage(), 
                                         "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -281,12 +319,9 @@ public class PhieuDoiTraUI extends JFrame {
     private void filterData() {
         try {
             List<PhieuDoiTra> list;
-            
             String trangThai = (String) cmbTrangThai.getSelectedItem();
             String loaiPhieu = (String) cmbLoaiPhieu.getSelectedItem();
             String timKiem = txtTimKiem.getText().trim();
-            
-            // Apply filters
             if (!"Tất cả".equals(trangThai)) {
                 list = phieuDoiTraService.layPhieuTheoTrangThai(trangThai);
             } else if (!"Tất cả".equals(loaiPhieu)) {
@@ -303,15 +338,54 @@ public class PhieuDoiTraUI extends JFrame {
             } else {
                 list = phieuDoiTraService.layDanhSachPhieu();
             }
-            
-            displayData(list);
-            
+            filteredPhieuDoiTra = new ArrayList<>(list);
+            currentPage = 1;
+            recalcPagination();
+            renderCurrentPage();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi lọc dữ liệu: " + e.getMessage(), 
                                         "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
+    private void renderCurrentPage(){
+        tableModel.setRowCount(0);
+        if(filteredPhieuDoiTra.isEmpty()){ updatePaginationControls(); return; }
+        int start = (currentPage-1)*pageSize;
+        int end = Math.min(start+pageSize, filteredPhieuDoiTra.size());
+        for(int i=start;i<end;i++){
+            PhieuDoiTra phieu = filteredPhieuDoiTra.get(i);
+            tableModel.addRow(new Object[]{
+                phieu.getMaPhieuDT(),
+                phieu.getMaHD(),
+                phieu.getLoaiPhieu().equals("DOI") ? "Đổi" : "Trả",
+                DateUtils.formatDate(phieu.getNgayTao()),
+                phieu.getTenKhachHang() != null ? phieu.getTenKhachHang() : "Khách lẻ",
+                phieu.getLyDo().length() > 30 ? phieu.getLyDo().substring(0, 30) + "..." : phieu.getLyDo(),
+                getTrangThaiText(phieu.getTrangThai()),
+                String.format("%,.0f", phieu.getTongGiaTriTra()),
+                String.format("%,.0f", phieu.getTongGiaTriDoi()),
+                String.format("%,.0f", phieu.getSoTienHoanLai()),
+                String.format("%,.0f", phieu.getSoTienBoSung())
+            });
+        }
+        updatePaginationControls();
+    }
+    private void recalcPagination(){
+        int total = filteredPhieuDoiTra.size();
+        totalPages = total==0?1:(int)Math.ceil(total/(double)pageSize);
+        if(currentPage>totalPages) currentPage= totalPages;
+        updatePaginationControls();
+    }
+    private void updatePaginationControls(){
+        if(lblPageInfo!=null){
+            lblPageInfo.setText("Page "+currentPage+"/"+totalPages+" ("+filteredPhieuDoiTra.size()+" records)");
+            btnFirstPage.setEnabled(currentPage>1);
+            btnPrevPage.setEnabled(currentPage>1);
+            btnNextPage.setEnabled(currentPage< totalPages);
+            btnLastPage.setEnabled(currentPage< totalPages);
+        }
+    }
+
     private void themPhieuDoiTra() {
         PhieuDoiTraFormUI formUI = new PhieuDoiTraFormUI(this);
         formUI.setVisible(true);

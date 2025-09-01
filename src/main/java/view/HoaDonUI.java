@@ -21,10 +21,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.io.File;
 import util.PDFInvoiceGenerator;
-import com.toedter.calendar.JDateChooser; // Added for date picker
-import java.util.Date; // for JDateChooser value
-import java.time.ZoneId; // for conversion to LocalDate
-import java.util.ArrayList; // pagination list
+import com.toedter.calendar.JDateChooser;
+import java.util.Date;
+import java.time.ZoneId;
+import java.util.ArrayList;
 
 public class HoaDonUI extends JFrame {
     private JTextField txtMaHD, txtTongTien, txtSelectedEmployee, txtSelectedCustomer, txtCustomerName;
@@ -57,10 +57,6 @@ public class HoaDonUI extends JFrame {
     private KhachHang selectedCustomer = null;
 
     private HoaDonController hoaDonController;
-    private KhachHangController khachHangController;
-    private NhanVienController nhanVienController;
-    private ChiTietHoaDonController chiTietController;
-    private BienTheSanPhamController bienTheController;
     private HinhThucThanhToanController hinhThucThanhToanController;
 
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -100,10 +96,6 @@ public class HoaDonUI extends JFrame {
 
     private void initControllers() {
         hoaDonController = new HoaDonController();
-        khachHangController = new KhachHangController();
-        nhanVienController = new NhanVienController();
-        chiTietController = new ChiTietHoaDonController();
-        bienTheController = new BienTheSanPhamController();
         hinhThucThanhToanController = new HinhThucThanhToanController();
     }
 

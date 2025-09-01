@@ -11,6 +11,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.List;
+import java.util.ArrayList;
 
 public class KhachHangUI extends BaseAuthenticatedUI {
     private KhachHangController controller;
@@ -20,10 +21,19 @@ public class KhachHangUI extends BaseAuthenticatedUI {
     private JTextField txtTimKiem;
     private JButton btnThem, btnSua, btnXoa, btnLamMoi, btnTimKiem;
 
+    private List<KhachHang> allKhachHang = new ArrayList<>();
+    private List<KhachHang> filteredKhachHang = new ArrayList<>();
+    private int currentPage = 1;
+    private int pageSize = 30;
+    private int totalPages = 1;
+    private JLabel lblPageInfo;
+    private JButton btnFirstPage, btnPrevPage, btnNextPage, btnLastPage;
+    private JComboBox<Integer> cboPageSize;
+
     public KhachHangUI() {
         controller = new KhachHangController();
         setTitle("Quản lý Khách Hàng");
-        setSize(700, 450);
+        setSize(900, 650);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         initComponents();
@@ -208,7 +218,33 @@ public class KhachHangUI extends BaseAuthenticatedUI {
         setLayout(new BorderLayout(5, 5));
         add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
-        add(panelButton, BorderLayout.SOUTH);
+        // Replace direct add of panelButton with container holding pagination
+        JPanel panelButtonContainer = new JPanel(new BorderLayout());
+        JPanel panelButtonEast = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 5));
+        // Pagination panel
+        JPanel paginationPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 5));
+        btnFirstPage = new JButton("|<");
+        btnPrevPage = new JButton("<");
+        btnNextPage = new JButton(">");
+        btnLastPage = new JButton(">|");
+        lblPageInfo = new JLabel("Page 1/1 (0 records)");
+        cboPageSize = new JComboBox<>(new Integer[]{10,30,50,100});
+        cboPageSize.setSelectedItem(30);
+        paginationPanel.add(new JLabel("Rows:"));
+        paginationPanel.add(cboPageSize);
+        paginationPanel.add(btnFirstPage);
+        paginationPanel.add(btnPrevPage);
+        paginationPanel.add(lblPageInfo);
+        paginationPanel.add(btnNextPage);
+        paginationPanel.add(btnLastPage);
+
+        panelButtonEast.add(btnThem);
+        panelButtonEast.add(btnSua);
+        panelButtonEast.add(btnXoa);
+        panelButtonEast.add(btnLamMoi);
+        panelButtonContainer.add(panelButtonEast, BorderLayout.WEST);
+        panelButtonContainer.add(paginationPanel, BorderLayout.EAST);
+        add(panelButtonContainer, BorderLayout.SOUTH);
 
         // Search functionality - only when button is clicked or Enter key pressed
         btnTimKiem.addActionListener(new ActionListener() {
@@ -281,14 +317,59 @@ public class KhachHangUI extends BaseAuthenticatedUI {
                 txtDiaChi.setText(tableModel.getValueAt(row, 3).toString());
             }
         });
+        // Add pagination listeners
+        btnFirstPage.addActionListener(e -> { if(currentPage!=1){currentPage=1; renderCurrentPage();}});
+        btnPrevPage.addActionListener(e -> { if(currentPage>1){currentPage--; renderCurrentPage();}});
+        btnNextPage.addActionListener(e -> { if(currentPage< totalPages){currentPage++; renderCurrentPage();}});
+        btnLastPage.addActionListener(e -> { if(currentPage!= totalPages){currentPage= totalPages; renderCurrentPage();}});
+        cboPageSize.addActionListener(e -> { Integer sel=(Integer) cboPageSize.getSelectedItem(); if(sel!=null && sel!=pageSize){pageSize=sel; currentPage=1; recalcPagination(); renderCurrentPage();}});
     }
 
     private void loadTable() {
+        // Modified for pagination
+        allKhachHang = controller.layDanhSachKhachHang();
+        filteredKhachHang = new ArrayList<>(allKhachHang);
+        currentPage = 1;
+        recalcPagination();
+        renderCurrentPage();
+    }
+
+    private void performSearch() {
+        String keyword = txtTimKiem.getText();
+        List<KhachHang> ds = controller.timKiemKhachHang(keyword);
+        filteredKhachHang = new ArrayList<>(ds);
+        currentPage = 1;
+        recalcPagination();
+        renderCurrentPage();
+    }
+
+    // Pagination helpers
+    private void recalcPagination(){
+        int total = filteredKhachHang.size();
+        totalPages = total==0?1:(int)Math.ceil(total/(double)pageSize);
+        if(currentPage>totalPages) currentPage= totalPages;
+        updatePaginationControls();
+    }
+    private void updatePaginationControls(){
+        int totalRecords = filteredKhachHang.size();
+        if(lblPageInfo!=null) lblPageInfo.setText("Page "+currentPage+"/"+totalPages+" ("+totalRecords+" records)");
+        if(btnFirstPage!=null){
+            btnFirstPage.setEnabled(currentPage>1);
+            btnPrevPage.setEnabled(currentPage>1);
+            btnNextPage.setEnabled(currentPage< totalPages);
+            btnLastPage.setEnabled(currentPage< totalPages);
+        }
+    }
+    private void renderCurrentPage(){
         tableModel.setRowCount(0);
-        List<KhachHang> ds = controller.layDanhSachKhachHang();
-        for (KhachHang kh : ds) {
+        if(filteredKhachHang.isEmpty()){ updatePaginationControls(); return; }
+        int start = (currentPage-1)*pageSize;
+        int end = Math.min(start+pageSize, filteredKhachHang.size());
+        for(int i=start;i<end;i++){
+            KhachHang kh = filteredKhachHang.get(i);
             tableModel.addRow(new Object[]{kh.getId(), kh.getHoTen(), kh.getDienThoai(), kh.getDiaChi()});
         }
+        updatePaginationControls();
     }
 
     private void clearInput() {
@@ -299,14 +380,6 @@ public class KhachHangUI extends BaseAuthenticatedUI {
         table.clearSelection();
     }
 
-    private void performSearch() {
-        String keyword = txtTimKiem.getText();
-        tableModel.setRowCount(0);
-        List<KhachHang> ds = controller.timKiemKhachHang(keyword);
-        for (KhachHang kh : ds) {
-            tableModel.addRow(new Object[]{kh.getId(), kh.getHoTen(), kh.getDienThoai(), kh.getDiaChi()});
-        }
-    }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new KhachHangUI().setVisible(true));

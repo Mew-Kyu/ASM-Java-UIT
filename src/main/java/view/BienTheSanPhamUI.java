@@ -11,10 +11,10 @@ import dao.impl.KichThuocDAO;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.*;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.text.Normalizer;
 import java.util.regex.Pattern;
@@ -22,7 +22,6 @@ import java.util.regex.Pattern;
 public class BienTheSanPhamUI extends JFrame {
     private JTable table;
     private DefaultTableModel tableModel;
-    private TableRowSorter<DefaultTableModel> rowSorter;
     private JTextField txtId, txtSoLuong, txtGiaBan, txtSearchField, txtSelectedProduct;
     private JButton btnSelectProduct;
     private JComboBox<MauSac> cbMauSac;
@@ -35,6 +34,15 @@ public class BienTheSanPhamUI extends JFrame {
     private final SanPhamDAO sanPhamDAO = new SanPhamDAO();
     private final MauSacDAO mauSacDAO = new MauSacDAO();
     private final KichThuocDAO kichThuocDAO = new KichThuocDAO();
+
+    private List<BienTheSanPham> allBienThe = new ArrayList<>();
+    private List<BienTheSanPham> filteredBienThe = new ArrayList<>();
+    private int currentPage = 1;
+    private int pageSize = 30;
+    private int totalPages = 1;
+    private JLabel lblPageInfo;
+    private JButton btnFirstPage, btnPrevPage, btnNextPage, btnLastPage;
+    private JComboBox<Integer> cboPageSize;
 
     public BienTheSanPhamUI() {
         setTitle("Quản Lý Hàng Hóa");
@@ -62,10 +70,6 @@ public class BienTheSanPhamUI extends JFrame {
         table = new JTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setRowHeight(25);
-
-        // Row sorter for filtering
-        rowSorter = new TableRowSorter<>(tableModel);
-        table.setRowSorter(rowSorter);
 
         // Form fields with enhanced user experience
         txtId = new JTextField();
@@ -189,8 +193,28 @@ public class BienTheSanPhamUI extends JFrame {
         // Center panel - Table
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createTitledBorder("Danh Sách Hàng Trong Kho"));
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.add(scrollPane, BorderLayout.CENTER);
 
-        // Bottom panel - Form and buttons
+        // Pagination panel (moved here directly under table)
+        JPanel paginationPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT,8,5));
+        btnFirstPage = new JButton("|<");
+        btnPrevPage = new JButton("<");
+        btnNextPage = new JButton(">");
+        btnLastPage = new JButton(">|");
+        lblPageInfo = new JLabel("Page 1/1 (0 records)");
+        cboPageSize = new JComboBox<>(new Integer[]{10,30,50,100});
+        cboPageSize.setSelectedItem(30);
+        paginationPanel.add(new JLabel("Rows:"));
+        paginationPanel.add(cboPageSize);
+        paginationPanel.add(btnFirstPage);
+        paginationPanel.add(btnPrevPage);
+        paginationPanel.add(lblPageInfo);
+        paginationPanel.add(btnNextPage);
+        paginationPanel.add(btnLastPage);
+        centerPanel.add(paginationPanel, BorderLayout.SOUTH);
+
+        // Bottom panel - only form + buttons now
         JPanel bottomPanel = new JPanel(new BorderLayout());
 
         // Form panel
@@ -368,13 +392,12 @@ public class BienTheSanPhamUI extends JFrame {
         btnPanel.add(Box.createHorizontalStrut(20));
         btnPanel.add(btnStockIn);
         btnPanel.add(btnStockOut);
-
         bottomPanel.add(formPanel, BorderLayout.CENTER);
         bottomPanel.add(btnPanel, BorderLayout.SOUTH);
 
         // Add panels to main frame
         add(topPanel, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
+        add(centerPanel, BorderLayout.CENTER);
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
@@ -410,7 +433,7 @@ public class BienTheSanPhamUI extends JFrame {
         // Search functionality
         txtSearchField.addKeyListener(new KeyAdapter() {
             public void keyReleased(KeyEvent e) {
-                filterTable();
+                performSearch();
             }
         });
 
@@ -426,148 +449,139 @@ public class BienTheSanPhamUI extends JFrame {
         btnStockOut.addActionListener(e -> stockOutDialog());
         btnLowStock.addActionListener(e -> showLowStockItems());
         btnSelectProduct.addActionListener(e -> selectProductDialog());
+
+        // Pagination listeners
+        btnFirstPage.addActionListener(e -> { if(currentPage!=1){currentPage=1; renderCurrentPage();}});
+        btnPrevPage.addActionListener(e -> { if(currentPage>1){currentPage--; renderCurrentPage();}});
+        btnNextPage.addActionListener(e -> { if(currentPage< totalPages){currentPage++; renderCurrentPage();}});
+        btnLastPage.addActionListener(e -> { if(currentPage!= totalPages){currentPage= totalPages; renderCurrentPage();}});
+        cboPageSize.addActionListener(e -> { Integer sel=(Integer)cboPageSize.getSelectedItem(); if(sel!=null && sel!=pageSize){pageSize=sel; currentPage=1; recalcPagination(); renderCurrentPage();}});
     }
 
     private void loadTable() {
-        tableModel.setRowCount(0);
-        // Use eager fetch to avoid LazyInitializationException when accessing associations in UI thread
-        List<BienTheSanPham> list = dao.findAllWithDetails();
-        for (BienTheSanPham bts : list) {
-            String sanPhamName = bts.getMaSP() != null ? bts.getMaSP().getTenSP() : "N/A";
-            String mauSacName = bts.getMaMau() != null ? bts.getMaMau().getTenMau() : "N/A";
-            String kichThuocName = bts.getMaSize() != null ? bts.getMaSize().getTenSize() : "N/A";
-            BigDecimal totalValue = bts.getGiaBan().multiply(new BigDecimal(bts.getSoLuong()));
-            String status = getStockStatus(bts.getSoLuong());
-
-            tableModel.addRow(new Object[]{
-                bts.getId(),
-                sanPhamName,
-                mauSacName,
-                kichThuocName,
-                bts.getSoLuong(),
-                String.format("%,.0f VNĐ", bts.getGiaBan()),
-                String.format("%,.0f VNĐ", totalValue),
-                status
-            });
-        }
+        // replaced direct table population with list caching
+        allBienThe = dao.findAllWithDetails();
+        filteredBienThe = new ArrayList<>(allBienThe);
+        currentPage = 1;
+        recalcPagination();
+        renderCurrentPage();
         updateStatistics();
     }
 
-    private String getStockStatus(Integer soLuong) {
-        if (soLuong == null || soLuong == 0) {
-            return "Hết hàng";
-        } else if (soLuong <= 10) {
-            return "Sắp hết";
-        } else if (soLuong <= 50) {
-            return "Ít hàng";
+    private void performSearch(){
+        String keyword = txtSearchField.getText().trim().toLowerCase();
+        String kwNo = removeVietnameseDiacritics(keyword);
+        if(keyword.isEmpty()){
+            filteredBienThe = new ArrayList<>(allBienThe);
         } else {
-            return "Còn hàng";
-        }
-    }
-
-    private void loadSelectedItem(int row) {
-        if (row < 0 || row >= table.getRowCount()) {
-            return; // Invalid row index, do nothing
-        }
-        
-        int modelRow = table.convertRowIndexToModel(row);
-        Integer id = (Integer) tableModel.getValueAt(modelRow, 0);
-        BienTheSanPham bts = dao.findByIdWithDetails(id);
-
-        if (bts != null) {
-            txtId.setText(String.valueOf(bts.getId()));
-            txtSoLuong.setText(String.valueOf(bts.getSoLuong()));
-            txtGiaBan.setText(bts.getGiaBan().toString());
-            selectedProduct = bts.getMaSP(); // Cập nhật selectedProduct
-            txtSelectedProduct.setText(bts.getMaSP() != null ? bts.getMaSP().getTenSP() : "N/A");
-            cbMauSac.setSelectedItem(bts.getMaMau());
-            cbKichThuoc.setSelectedItem(bts.getMaSize());
-        }
-    }
-
-    private void filterTable() {
-        String text = txtSearchField.getText().trim();
-        if (text.isEmpty()) {
-            rowSorter.setRowFilter(null);
-        } else {
-            // Create a custom RowFilter that supports Vietnamese search
-            rowSorter.setRowFilter(new VietnameseRowFilter(text));
-        }
-    }
-    
-    /**
-     * Removes Vietnamese diacritics (accent marks) from text
-     * Converts "áàảãạ" to "a", "éèẻẽẹ" to "e", etc.
-     */
-    private String removeVietnameseDiacritics(String text) {
-        if (text == null) return "";
-        
-        // Normalize to decomposed form (NFD) - separates base characters from diacritics
-        String normalized = Normalizer.normalize(text, Normalizer.Form.NFD);
-        
-        // Remove diacritical marks (combining diacritical marks Unicode category)
-        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
-        String withoutDiacritics = pattern.matcher(normalized).replaceAll("");
-        
-        // Handle special Vietnamese characters that don't decompose properly
-        withoutDiacritics = withoutDiacritics
-            .replace("đ", "d").replace("Đ", "D")  // Handle đ/Đ specifically
-            .replace("ư", "u").replace("Ư", "U")  // Handle ư/Ư specifically  
-            .replace("ơ", "o").replace("Ơ", "O"); // Handle ơ/Ơ specifically
-            
-        return withoutDiacritics;
-    }
-    
-    /**
-     * Custom RowFilter that supports Vietnamese diacritic-insensitive search
-     */
-    private class VietnameseRowFilter extends RowFilter<DefaultTableModel, Object> {
-        private final String searchText;
-        private final String searchTextNoDiacritics;
-        
-        public VietnameseRowFilter(String searchText) {
-            this.searchText = searchText.toLowerCase();
-            this.searchTextNoDiacritics = removeVietnameseDiacritics(this.searchText);
-        }
-        
-        @Override
-        public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
-            // Check all columns in the row
-            for (int i = 0; i < entry.getValueCount(); i++) {
-                String value = entry.getStringValue(i);
-                if (value != null) {
-                    String valueLower = value.toLowerCase();
-                    String valueNoDiacritics = removeVietnameseDiacritics(valueLower);
-                    
-                    // Match if either:
-                    // 1. Original text contains search term (for exact matches)
-                    // 2. Text without diacritics contains search term without diacritics
-                    if (valueLower.contains(searchText) || 
-                        valueNoDiacritics.contains(searchTextNoDiacritics)) {
-                        return true;
-                    }
+            filteredBienThe = new ArrayList<>();
+            for(BienTheSanPham b: allBienThe){
+                String sp = b.getMaSP()!=null? b.getMaSP().getTenSP():"";
+                String mau = b.getMaMau()!=null? b.getMaMau().getTenMau():"";
+                String size = b.getMaSize()!=null? b.getMaSize().getTenSize():"";
+                String status = getStockStatus(b.getSoLuong());
+                String joined = (sp+" "+mau+" "+size+" "+status).toLowerCase();
+                String joinedNo = removeVietnameseDiacritics(joined);
+                if(joined.contains(keyword) || joinedNo.contains(kwNo)){
+                    filteredBienThe.add(b);
                 }
             }
-            return false;
         }
+        currentPage = 1;
+        recalcPagination();
+        renderCurrentPage();
+        updateStatisticsFromList(filteredBienThe);
+    }
+
+    private void recalcPagination(){
+        int total = filteredBienThe.size();
+        totalPages = total==0?1:(int)Math.ceil(total/(double)pageSize);
+        if(currentPage>totalPages) currentPage = totalPages;
+        updatePaginationControls();
+    }
+    private void updatePaginationControls(){
+        if(lblPageInfo!=null){
+            lblPageInfo.setText("Page "+currentPage+"/"+totalPages+" ("+filteredBienThe.size()+" records)");
+            btnFirstPage.setEnabled(currentPage>1);
+            btnPrevPage.setEnabled(currentPage>1);
+            btnNextPage.setEnabled(currentPage< totalPages);
+            btnLastPage.setEnabled(currentPage< totalPages);
+        }
+    }
+    private void renderCurrentPage(){
+        tableModel.setRowCount(0);
+        if(filteredBienThe.isEmpty()){ updatePaginationControls(); return; }
+        int start = (currentPage-1)*pageSize;
+        int end = Math.min(start+pageSize, filteredBienThe.size());
+        for(int i=start;i<end;i++){
+            BienTheSanPham bts = filteredBienThe.get(i);
+            String sanPhamName = bts.getMaSP() != null ? bts.getMaSP().getTenSP() : "N/A";
+            String mauSacName = bts.getMaMau() != null ? bts.getMaMau().getTenMau() : "N/A";
+            String kichThuocName = bts.getMaSize() != null ? bts.getMaSize().getTenSize() : "N/A";
+            int so = bts.getSoLuong() == null ? 0 : bts.getSoLuong();
+            BigDecimal gia = bts.getGiaBan() == null ? BigDecimal.ZERO : bts.getGiaBan();
+            BigDecimal totalValue = gia.multiply(BigDecimal.valueOf(so));
+            String status = getStockStatus(so);
+            tableModel.addRow(new Object[]{
+                bts.getId(), sanPhamName, mauSacName, kichThuocName, so,
+                String.format("%,.0f VNĐ", gia), String.format("%,.0f VNĐ", totalValue), status
+            });
+        }
+        updatePaginationControls();
+    }
+
+    // Populate form from selected table row
+    private void loadSelectedItem(int viewRow){
+        if(viewRow < 0) return;
+        // Since we rebuild table each render, index aligns with filteredBienThe slice
+        int modelStart = (currentPage-1)*pageSize;
+        int indexInFiltered = modelStart + viewRow;
+        if(indexInFiltered < 0 || indexInFiltered >= filteredBienThe.size()) return;
+        BienTheSanPham bts = filteredBienThe.get(indexInFiltered);
+        txtId.setText(String.valueOf(bts.getId()));
+        txtSoLuong.setText(bts.getSoLuong() != null ? String.valueOf(bts.getSoLuong()) : "");
+        txtGiaBan.setText(bts.getGiaBan() != null ? bts.getGiaBan().toPlainString() : "");
+        selectedProduct = bts.getMaSP();
+        txtSelectedProduct.setText(selectedProduct != null ? selectedProduct.getTenSP() : "");
+        // Set màu sắc
+        MauSac m = bts.getMaMau();
+        if(m != null){
+            for(int i=0;i<cbMauSac.getItemCount();i++){
+                MauSac item = cbMauSac.getItemAt(i);
+                if(item!=null && item.getId()==m.getId()) { cbMauSac.setSelectedIndex(i); break; }
+            }
+        }
+        // Set kích thước
+        KichThuoc k = bts.getMaSize();
+        if(k != null){
+            for(int i=0;i<cbKichThuoc.getItemCount();i++){
+                KichThuoc item = cbKichThuoc.getItemAt(i);
+                if(item!=null && item.getId()==k.getId()) { cbKichThuoc.setSelectedIndex(i); break; }
+            }
+        }
+    }
+
+    // Derive stock status text
+    private String getStockStatus(Integer soLuong){
+        if(soLuong == null) return "Không rõ";
+        if(soLuong <= 0) return "Hết hàng";
+        if(soLuong <= 10) return "Sắp hết";
+        return "Còn hàng";
     }
 
     private void updateStatistics() {
-        // Use eager fetch for statistics as well
-        List<BienTheSanPham> allItems = dao.findAllWithDetails();
-        int totalItems = allItems.size();
+        updateStatisticsFromList(allBienThe);
+    }
+    private void updateStatisticsFromList(List<BienTheSanPham> list){
+        int totalItems = list.size();
         BigDecimal totalValue = BigDecimal.ZERO;
         int lowStockCount = 0;
-
-        for (BienTheSanPham bts : allItems) {
+        for (BienTheSanPham bts : list) {
             if (bts.getSoLuong() != null && bts.getGiaBan() != null) {
                 totalValue = totalValue.add(bts.getGiaBan().multiply(new BigDecimal(bts.getSoLuong())));
-                if (bts.getSoLuong() <= 10) {
-                    lowStockCount++;
-                }
+                if (bts.getSoLuong() <= 10) lowStockCount++;
             }
         }
-
         lblTotalItems.setText("Tổng số mặt hàng: " + totalItems);
         lblTotalValue.setText("Tổng giá trị kho: " + String.format("%,.0f VNĐ", totalValue));
         lblLowStockAlert.setText("Cảnh báo hết hàng: " + lowStockCount + " sản phẩm");
@@ -824,6 +838,29 @@ public class BienTheSanPhamUI extends JFrame {
         cbKichThuoc.setSelectedIndex(0);
         table.clearSelection();
         selectedProduct = null;
+    }
+
+    /**
+     * Removes Vietnamese diacritics (accent marks) from text
+     * Converts "áàảãạ" to "a", "éèẻẽẹ" to "e", etc.
+     */
+    private String removeVietnameseDiacritics(String text) {
+        if (text == null) return "";
+
+        // Normalize to decomposed form (NFD) - separates base characters from diacritics
+        String normalized = Normalizer.normalize(text, Normalizer.Form.NFD);
+
+        // Remove diacritical marks (combining diacritical marks Unicode category)
+        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        String withoutDiacritics = pattern.matcher(normalized).replaceAll("");
+
+        // Handle special Vietnamese characters that don't decompose properly
+        withoutDiacritics = withoutDiacritics
+            .replace("đ", "d").replace("Đ", "D")  // Handle đ/Đ specifically
+            .replace("ư", "u").replace("Ư", "U")  // Handle ư/Ư specifically
+            .replace("ơ", "o").replace("Ơ", "O"); // Handle ơ/Ơ specifically
+
+        return withoutDiacritics;
     }
 
     public static void main(String[] args) {

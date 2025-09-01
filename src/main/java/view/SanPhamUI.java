@@ -10,7 +10,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-
+import java.util.ArrayList;
 import java.util.List;
 
 public class SanPhamUI extends JFrame {
@@ -20,6 +20,15 @@ public class SanPhamUI extends JFrame {
     private JTextField txtId, txtTenSP, txtMoTa, txtSearch;
     private JComboBox<DanhMuc> cmbDanhMuc;
     private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnSearch, btnClear;
+
+    private List<SanPham> allSanPham = new ArrayList<>();
+    private List<SanPham> filteredSanPham = new ArrayList<>();
+    private int currentPage = 1;
+    private int pageSize = 30;
+    private int totalPages = 1;
+    private JLabel lblPageInfo;
+    private JButton btnFirstPage, btnPrevPage, btnNextPage, btnLastPage;
+    private JComboBox<Integer> cboPageSize;
 
     public SanPhamUI() {
         // Check authentication
@@ -47,7 +56,8 @@ public class SanPhamUI extends JFrame {
     }
 
     private void initComponents() {
-        JPanel panel = new JPanel(new BorderLayout());
+        JPanel panel = new JPanel(new BorderLayout(8,8));
+        panel.setBorder(BorderFactory.createEmptyBorder(8,8,8,8));
 
         // Initialize buttons first
         btnAdd = new JButton("Thêm");
@@ -235,19 +245,45 @@ public class SanPhamUI extends JFrame {
         buttonPanel.add(btnDelete);
         buttonPanel.add(btnRefresh);
 
-        // Layout assembly
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.add(searchPanel, BorderLayout.NORTH);
-        topPanel.add(inputPanel, BorderLayout.CENTER);
+        // Pagination panel
+        JPanel paginationPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 5));
+        btnFirstPage = new JButton("|<");
+        btnPrevPage = new JButton("<");
+        btnNextPage = new JButton(">");
+        btnLastPage = new JButton(">|");
+        lblPageInfo = new JLabel("Page 1/1 (0 records)");
+        cboPageSize = new JComboBox<>(new Integer[]{10,30,50,100});
+        cboPageSize.setSelectedItem(30);
+        paginationPanel.add(new JLabel("Rows:"));
+        paginationPanel.add(cboPageSize);
+        paginationPanel.add(btnFirstPage);
+        paginationPanel.add(btnPrevPage);
+        paginationPanel.add(lblPageInfo);
+        paginationPanel.add(btnNextPage);
+        paginationPanel.add(btnLastPage);
 
-        panel.add(topPanel, BorderLayout.NORTH);
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.add(buttonPanel, BorderLayout.WEST);
+        bottomPanel.add(paginationPanel, BorderLayout.EAST);
+
+        // ADD: top container combining search + input (previously missing)
+        JPanel topContainer = new JPanel(new BorderLayout(5,5));
+        topContainer.add(searchPanel, BorderLayout.NORTH);
+        topContainer.add(inputPanel, BorderLayout.CENTER);
+        panel.add(topContainer, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
-        panel.add(buttonPanel, BorderLayout.SOUTH);
+        panel.add(bottomPanel, BorderLayout.SOUTH);
 
         add(panel);
 
         // Event handlers
         setupEventHandlers();
+        // Add pagination listeners
+        btnFirstPage.addActionListener(e -> { if(currentPage!=1){currentPage=1; renderCurrentPage();}});
+        btnPrevPage.addActionListener(e -> { if(currentPage>1){currentPage--; renderCurrentPage();}});
+        btnNextPage.addActionListener(e -> { if(currentPage< totalPages){currentPage++; renderCurrentPage();}});
+        btnLastPage.addActionListener(e -> { if(currentPage!= totalPages){currentPage= totalPages; renderCurrentPage();}});
+        cboPageSize.addActionListener(e -> { Integer sel=(Integer)cboPageSize.getSelectedItem(); if(sel!=null && sel!=pageSize){pageSize=sel; currentPage=1; recalcPagination(); renderCurrentPage();}});
     }
 
     private void setupEventHandlers() {
@@ -419,15 +455,11 @@ public class SanPhamUI extends JFrame {
     private void loadTable() {
         tableModel.setRowCount(0);
         try {
-            List<SanPham> list = controller.getAllSanPham();
-            for (SanPham sp : list) {
-                tableModel.addRow(new Object[]{
-                        sp.getId(),
-                        sp.getTenSP(),
-                        sp.getDanhMuc() != null ? sp.getDanhMuc().getTenDM() : "N/A",
-                        sp.getMoTa()
-                });
-            }
+            allSanPham = controller.getAllSanPham();
+            filteredSanPham = new ArrayList<>(allSanPham);
+            currentPage = 1;
+            recalcPagination();
+            renderCurrentPage();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi tải dữ liệu: " + e.getMessage());
         }
@@ -438,16 +470,46 @@ public class SanPhamUI extends JFrame {
         tableModel.setRowCount(0);
         try {
             List<SanPham> list = controller.searchSanPham(keyword);
-            for (SanPham sp : list) {
-                tableModel.addRow(new Object[]{
-                        sp.getId(),
-                        sp.getTenSP(),
-                        sp.getDanhMuc() != null ? sp.getDanhMuc().getTenDM() : "N/A",
-                        sp.getMoTa()
-                });
-            }
+            filteredSanPham = new ArrayList<>(list);
+            currentPage = 1;
+            recalcPagination();
+            renderCurrentPage();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Lỗi khi tìm kiếm: " + e.getMessage());
         }
+    }
+
+    // Pagination helpers
+    private void recalcPagination(){
+        int total = filteredSanPham.size();
+        totalPages = total==0?1:(int)Math.ceil(total/(double)pageSize);
+        if(currentPage>totalPages) currentPage= totalPages;
+        updatePaginationControls();
+    }
+    private void updatePaginationControls(){
+        int totalRecords = filteredSanPham.size();
+        if(lblPageInfo!=null) lblPageInfo.setText("Page "+currentPage+"/"+totalPages+" ("+totalRecords+" records)");
+        if(btnFirstPage!=null){
+            btnFirstPage.setEnabled(currentPage>1);
+            btnPrevPage.setEnabled(currentPage>1);
+            btnNextPage.setEnabled(currentPage< totalPages);
+            btnLastPage.setEnabled(currentPage< totalPages);
+        }
+    }
+    private void renderCurrentPage(){
+        tableModel.setRowCount(0);
+        if(filteredSanPham.isEmpty()){ updatePaginationControls(); return; }
+        int start = (currentPage-1)*pageSize;
+        int end = Math.min(start+pageSize, filteredSanPham.size());
+        for(int i=start;i<end;i++){
+            SanPham sp = filteredSanPham.get(i);
+            tableModel.addRow(new Object[]{
+                sp.getId(),
+                sp.getTenSP(),
+                sp.getDanhMuc() != null ? sp.getDanhMuc().getTenDM() : "N/A",
+                sp.getMoTa()
+            });
+        }
+        updatePaginationControls();
     }
 }
