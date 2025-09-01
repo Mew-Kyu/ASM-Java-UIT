@@ -37,6 +37,7 @@ public class TaiKhoanUI extends JFrame {
     private JLabel lblPageInfo;
     private JButton btnFirstPage, btnPrevPage, btnNextPage, btnLastPage;
     private JComboBox<Integer> cmbPageSize;
+    private Runnable logoutListenerRef; // reference to remove later
 
     public TaiKhoanUI() {
         // Check authentication and authorization
@@ -62,13 +63,36 @@ public class TaiKhoanUI extends JFrame {
         initComponents();
         loadTable();
 
+        // Auto-close on logout (security)
+        logoutListenerRef = () -> {
+            if (!SessionManager.getInstance().isLoggedIn()) {
+                SwingUtilities.invokeLater(() -> {
+                    try { dispose(); } catch (Exception ignored) { }
+                });
+            }
+        };
+        SessionManager.getInstance().addLogoutListener(logoutListenerRef);
+
         // Handle window closing
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                cleanupLogoutListener();
                 dispose();
             }
+
+            @Override
+            public void windowClosed(WindowEvent e) {
+                cleanupLogoutListener();
+            }
         });
+    }
+
+    private void cleanupLogoutListener() {
+        if (logoutListenerRef != null) {
+            SessionManager.getInstance().removeLogoutListener(logoutListenerRef);
+            logoutListenerRef = null;
+        }
     }
 
     private void initComponents() {

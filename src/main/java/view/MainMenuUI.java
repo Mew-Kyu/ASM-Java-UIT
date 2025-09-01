@@ -509,9 +509,18 @@ public class MainMenuUI extends JFrame {
                 JOptionPane.YES_NO_OPTION);
 
         if (option == JOptionPane.YES_OPTION) {
+            // Invalidate session first
             sessionManager.logout();
-            new LoginUI().setVisible(true);
-            this.dispose();
+            // Open login screen BEFORE closing other windows, keep reference
+            LoginUI login = new LoginUI();
+            login.setVisible(true);
+            // Dispose all other open windows (frames & dialogs) to prevent lingering access
+            // This ensures any previously opened management screens are closed
+            for (Window w : Window.getWindows()) {
+                if (w != login) {
+                    try { w.dispose(); } catch (Exception ignored) { }
+                }
+            }
         }
     }
 
