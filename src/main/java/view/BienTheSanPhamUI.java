@@ -8,6 +8,7 @@ import dao.impl.BienTheSanPhamDAO;
 import dao.impl.SanPhamDAO;
 import dao.impl.MauSacDAO;
 import dao.impl.KichThuocDAO;
+import util.ExcelBienTheExporter; // Added for Excel export
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -27,6 +28,7 @@ public class BienTheSanPhamUI extends JFrame {
     private JComboBox<MauSac> cbMauSac;
     private JComboBox<KichThuoc> cbKichThuoc;
     private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnStockIn, btnStockOut, btnLowStock;
+    private JButton btnExportExcel; // New export button
     private JLabel lblTotalItems, lblTotalValue, lblLowStockAlert;
     private SanPham selectedProduct = null;
 
@@ -161,6 +163,13 @@ public class BienTheSanPhamUI extends JFrame {
         btnSelectProduct.setForeground(Color.WHITE);
         btnSelectProduct.setFocusPainted(false);
         btnSelectProduct.setToolTipText("Mở danh sách sản phẩm đã chọn");
+
+        btnExportExcel = new JButton("⬇️ Xuất Excel");
+        btnExportExcel.setPreferredSize(new Dimension(130, 35));
+        btnExportExcel.setBackground(new Color(0,128,0));
+        btnExportExcel.setForeground(Color.WHITE);
+        btnExportExcel.setFocusPainted(false);
+        btnExportExcel.setToolTipText("Xuất danh sách biến thể (đang lọc) ra Excel");
 
         // Statistics labels
         lblTotalItems = new JLabel("Tổng số mặt hàng: 0");
@@ -392,6 +401,7 @@ public class BienTheSanPhamUI extends JFrame {
         btnPanel.add(Box.createHorizontalStrut(20));
         btnPanel.add(btnStockIn);
         btnPanel.add(btnStockOut);
+        btnPanel.add(btnExportExcel); // add export button
         bottomPanel.add(formPanel, BorderLayout.CENTER);
         bottomPanel.add(btnPanel, BorderLayout.SOUTH);
 
@@ -449,6 +459,7 @@ public class BienTheSanPhamUI extends JFrame {
         btnStockOut.addActionListener(e -> stockOutDialog());
         btnLowStock.addActionListener(e -> showLowStockItems());
         btnSelectProduct.addActionListener(e -> selectProductDialog());
+        btnExportExcel.addActionListener(e -> exportExcel()); // export handler
 
         // Pagination listeners
         btnFirstPage.addActionListener(e -> { if(currentPage!=1){currentPage=1; renderCurrentPage();}});
@@ -779,6 +790,39 @@ public class BienTheSanPhamUI extends JFrame {
         if (product != null) {
             selectedProduct = product;
             txtSelectedProduct.setText(product.getTenSP());
+        }
+    }
+
+    private void exportExcel() {
+        try {
+            List<BienTheSanPham> toExport = filteredBienThe == null ? new ArrayList<>() : filteredBienThe;
+            if (toExport.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Không có dữ liệu để xuất!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            JFileChooser chooser = new JFileChooser();
+            chooser.setDialogTitle("Chọn nơi lưu file Excel");
+            chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Excel Files", "xlsx"));
+            chooser.setSelectedFile(new java.io.File("HangHoa.xlsx"));
+            int res = chooser.showSaveDialog(this);
+            if (res == JFileChooser.APPROVE_OPTION) {
+                java.io.File chosen = chooser.getSelectedFile();
+                String path = chosen.getAbsolutePath();
+                if (!path.toLowerCase().endsWith(".xlsx")) path += ".xlsx";
+                java.io.File outFile = new java.io.File(path);
+                if (outFile.exists()) {
+                    String dir = outFile.getParent(); if (dir == null) dir = ".";
+                    int c = 1; do { outFile = new java.io.File(dir, "HangHoa" + c + ".xlsx"); c++; } while (outFile.exists());
+                }
+                ExcelBienTheExporter.export(toExport, outFile.getAbsolutePath());
+                JOptionPane.showMessageDialog(this, "Xuất Excel thành công!\nFile: " + outFile.getAbsolutePath(), "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                int open = JOptionPane.showConfirmDialog(this, "Mở file vừa tạo?", "Mở file", JOptionPane.YES_NO_OPTION);
+                if (open == JOptionPane.YES_OPTION) {
+                    try { if (Desktop.isDesktopSupported()) Desktop.getDesktop().open(outFile); } catch (Exception ignore) {}
+                }
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi xuất Excel: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 

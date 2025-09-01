@@ -1475,17 +1475,29 @@ public class HoaDonUI extends JFrame {
             fileChooser.setSelectedFile(new java.io.File("DanhSachHoaDon.xlsx"));
             int userSelection = fileChooser.showSaveDialog(this);
             if (userSelection == JFileChooser.APPROVE_OPTION) {
-                java.io.File fileToSave = fileChooser.getSelectedFile();
-                String filePath = fileToSave.getAbsolutePath();
+                java.io.File chosen = fileChooser.getSelectedFile();
+                String filePath = chosen.getAbsolutePath();
                 if (!filePath.toLowerCase().endsWith(".xlsx")) {
                     filePath += ".xlsx";
                 }
-                // Export all currently filtered invoices (across all pages)
-                ExcelInvoiceExporter.export(filteredHoaDon, filePath);
-                JOptionPane.showMessageDialog(this, "Xuất Excel thành công!\nFile: " + filePath, "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                java.io.File outFile = new java.io.File(filePath);
+                // If file exists, generate new name DanhSachHoaDon_{n}.xlsx
+                if (outFile.exists()) {
+                    String dir = outFile.getParent();
+                    if (dir == null) dir = ".";
+                    int counter = 1;
+                    do {
+                        outFile = new java.io.File(dir, "DanhSachHoaDon_" + counter + ".xlsx");
+                        counter++;
+                    } while (outFile.exists());
+                }
+                String finalPath = outFile.getAbsolutePath();
+                ExcelInvoiceExporter.export(filteredHoaDon, finalPath);
+                String msg = "Xuất Excel thành công!\nFile: " + finalPath + (outFile.getName().startsWith("DanhSachHoaDon_") ? " (Tên tự động do file tồn tại)" : "");
+                JOptionPane.showMessageDialog(this, msg, "Thành công", JOptionPane.INFORMATION_MESSAGE);
                 int open = JOptionPane.showConfirmDialog(this, "Bạn có muốn mở file không?", "Mở file", JOptionPane.YES_NO_OPTION);
                 if (open == JOptionPane.YES_OPTION) {
-                    try { if (Desktop.isDesktopSupported()) Desktop.getDesktop().open(new java.io.File(filePath)); } catch (Exception ex) { /* ignore */ }
+                    try { if (Desktop.isDesktopSupported()) Desktop.getDesktop().open(outFile); } catch (Exception ex) { /* ignore */ }
                 }
             }
         } catch (Exception ex) {
