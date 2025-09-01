@@ -7,12 +7,19 @@ import javax.swing.*;
 import java.util.logging.Logger;
 
 public class Main {
+    static {
+        // Route java.util.logging through Log4j2 before any Logger instances are created
+        System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
+        try {
+            java.util.logging.LogManager.getLogManager().reset();
+        } catch (Exception ignored) {}
+    }
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
     
     public static void main(String[] args) {
         try {
+            LOGGER.info("Starting application (Log4j2 bridged)...");
             // Initialize application configuration and DI container
-            LOGGER.info("Starting application...");
             ApplicationConfig.initialize();
             
             // Set look and feel

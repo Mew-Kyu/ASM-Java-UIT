@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.io.File;
 import util.PDFInvoiceGenerator;
+import util.ExcelInvoiceExporter;
 import com.toedter.calendar.JDateChooser;
 import java.util.Date;
 import java.time.ZoneId;
@@ -41,6 +42,7 @@ public class HoaDonUI extends JFrame {
     private JComboBox<HinhThucThanhToan> cboHinhThucThanhToan;
     private JComboBox<String> cboTrangThaiThanhToan;
     private JButton btnAdd, btnUpdate, btnDelete, btnRefresh, btnViewDetails, btnAddDetail, btnPrintPDF;
+    private JButton btnExportExcel; // New button for Excel export
     private JTable tableHoaDon;
     private DefaultTableModel tableModelHoaDon;
     // Pagination state
@@ -654,7 +656,7 @@ public class HoaDonUI extends JFrame {
         panel.setBorder(BorderFactory.createTitledBorder("Danh sách hóa đơn"));
 
         tableModelHoaDon = new DefaultTableModel(
-                new Object[]{"Mã HĐ", "Ngày lập", "Khách hàng", "Nhân viên", "Tổng tiền", "Số items"}, 0) {
+                new Object[]{"Mã HĐ", "Ngày lập", "Khách hàng", "Nhân viên", "Tổng tiền", "Số items", "Trạng thái"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -672,6 +674,7 @@ public class HoaDonUI extends JFrame {
         tableHoaDon.getColumnModel().getColumn(3).setPreferredWidth(150);
         tableHoaDon.getColumnModel().getColumn(4).setPreferredWidth(120);
         tableHoaDon.getColumnModel().getColumn(5).setPreferredWidth(80);
+        tableHoaDon.getColumnModel().getColumn(6).setPreferredWidth(110); // Trạng thái
 
         JScrollPane scrollPane = new JScrollPane(tableHoaDon);
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -776,13 +779,16 @@ public class HoaDonUI extends JFrame {
         int end = Math.min(start + pageSize, filteredHoaDon.size());
         for (int i = start; i < end; i++) {
             HoaDon hd = filteredHoaDon.get(i);
+            String statusDb = hd.getTrangThaiThanhToan();
+            String statusDisplay = statusDb != null ? DB_TO_DISPLAY.getOrDefault(statusDb, statusDb) : "";
             Object[] row = {
                 hd.getId(),
                 hd.getNgayLap().format(dateFormatter),
                 hd.getMaKH() != null ? hd.getMaKH().getHoTen() : "Khách lẻ",
                 hd.getMaNV() != null ? hd.getMaNV().getHoTen() : "N/A",
                 String.format("%,.0f VNĐ", hd.getTongTien()),
-                hd.getTotalItems()
+                hd.getTotalItems(),
+                statusDisplay
             };
             tableModelHoaDon.addRow(row);
         }
@@ -939,6 +945,7 @@ public class HoaDonUI extends JFrame {
 
         btnRefresh = createStyledButton("Làm mới", Color.GRAY, Color.WHITE, 120);
         btnPrintPDF = createStyledButton("In PDF", Color.DARK_GRAY, Color.WHITE, 120);
+        btnExportExcel = createStyledButton("Xuất Excel", new Color(0,128,0), Color.WHITE, 130); // New button
 
         // Group buttons logically
         JPanel mainActionsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
@@ -953,6 +960,7 @@ public class HoaDonUI extends JFrame {
         JPanel utilityActionsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
         utilityActionsPanel.add(btnRefresh);
         utilityActionsPanel.add(btnPrintPDF);
+        utilityActionsPanel.add(btnExportExcel); // Add new button
 
         // Add groups to main panel
         panel.add(mainActionsPanel);
@@ -1044,6 +1052,7 @@ public class HoaDonUI extends JFrame {
             loadData();
         });
         btnPrintPDF.addActionListener(e -> printInvoiceToPDF());
+        btnExportExcel.addActionListener(e -> exportInvoicesToExcel()); // Handler for Excel export
         btnSelectEmployee.addActionListener(e -> selectEmployeeDialog());
         btnSelectCustomer.addActionListener(e -> selectCustomerDialog());
 
@@ -1451,6 +1460,36 @@ public class HoaDonUI extends JFrame {
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Lỗi khi tạo PDF: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
+        }
+    }
+
+    private void exportInvoicesToExcel() {
+        try {
+            if (filteredHoaDon == null || filteredHoaDon.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Không có dữ liệu để xuất!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Chọn nơi lưu file Excel");
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Excel Files", "xlsx"));
+            fileChooser.setSelectedFile(new java.io.File("DanhSachHoaDon.xlsx"));
+            int userSelection = fileChooser.showSaveDialog(this);
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                java.io.File fileToSave = fileChooser.getSelectedFile();
+                String filePath = fileToSave.getAbsolutePath();
+                if (!filePath.toLowerCase().endsWith(".xlsx")) {
+                    filePath += ".xlsx";
+                }
+                // Export all currently filtered invoices (across all pages)
+                ExcelInvoiceExporter.export(filteredHoaDon, filePath);
+                JOptionPane.showMessageDialog(this, "Xuất Excel thành công!\nFile: " + filePath, "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                int open = JOptionPane.showConfirmDialog(this, "Bạn có muốn mở file không?", "Mở file", JOptionPane.YES_NO_OPTION);
+                if (open == JOptionPane.YES_OPTION) {
+                    try { if (Desktop.isDesktopSupported()) Desktop.getDesktop().open(new java.io.File(filePath)); } catch (Exception ex) { /* ignore */ }
+                }
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi xuất Excel: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 

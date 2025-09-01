@@ -1,0 +1,192 @@
+2025-09-01 18:03:39.203 [main] INFO  main.Main - Starting application (Log4j2 bridged)...
+2025-09-01 18:03:39.207 [main] INFO  config.ApplicationConfig - Initializing application configuration...
+2025-09-01 18:03:39.209 [main] INFO  di.ServiceContainer - ServiceContainer initialized
+2025-09-01 18:03:39.211 [main] INFO  di.ServiceContainer - Registered singleton service: ISanPhamDAO
+2025-09-01 18:03:39.212 [main] INFO  di.ServiceContainer - Registered singleton service: IDanhMucDAO
+2025-09-01 18:03:39.342 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: QuanLyCuaHangPU]
+2025-09-01 18:03:39.368 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 7.0.8.Final
+2025-09-01 18:03:39.584 [main] INFO  org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator - HHH000130: Instantiating explicit connection provider: org.hibernate.hikaricp.internal.HikariCPConnectionProvider
+2025-09-01 18:03:39.658 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Starting...
+2025-09-01 18:03:39.879 [main] INFO  com.zaxxer.hikari.pool.HikariPool - MyPool - Added connection ConnectionID:1 ClientConnectionId: 2c4a0927-df0e-4325-bf63-583092b965af
+2025-09-01 18:03:39.879 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Start completed.
+2025-09-01 18:03:39.984 [main] INFO  org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:sqlserver://localhost:1433;databaseName=QuanLyCuaHangQuanAo;trustServerCertificate=true]
+	Database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+	Database version: 16.0
+	Autocommit mode: false
+	Isolation level: undefined/unknown
+	Pool: HikariCPConnectionProvider
+	Minimum pool size: 3
+	Maximum pool size: 10
+2025-09-01 18:03:40.930 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-01 18:03:40.944 [main] INFO  org.hibernate.orm.connections.access - HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@1a947424] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+2025-09-01 18:03:41.338 [main] INFO  di.ServiceContainer - Registered singleton service: ITaiKhoanDAO
+2025-09-01 18:03:41.347 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: QuanLyCuaHangPU]
+2025-09-01 18:03:41.353 [main] INFO  org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator - HHH000130: Instantiating explicit connection provider: org.hibernate.hikaricp.internal.HikariCPConnectionProvider
+2025-09-01 18:03:41.354 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Starting...
+2025-09-01 18:03:41.364 [main] INFO  com.zaxxer.hikari.pool.HikariPool - MyPool - Added connection ConnectionID:4 ClientConnectionId: 1c656393-6916-4209-80c5-4bc2acfea073
+2025-09-01 18:03:41.365 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Start completed.
+2025-09-01 18:03:41.366 [main] INFO  org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:sqlserver://localhost:1433;databaseName=QuanLyCuaHangQuanAo;trustServerCertificate=true]
+	Database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+	Database version: 16.0
+	Autocommit mode: false
+	Isolation level: undefined/unknown
+	Pool: HikariCPConnectionProvider
+	Minimum pool size: 3
+	Maximum pool size: 10
+2025-09-01 18:03:41.432 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-01 18:03:41.433 [main] INFO  org.hibernate.orm.connections.access - HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@7512a9a6] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+2025-09-01 18:03:41.504 [main] INFO  di.ServiceContainer - Registered singleton service: INhanVienDAO
+2025-09-01 18:03:41.512 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: QuanLyCuaHangPU]
+2025-09-01 18:03:41.518 [main] INFO  org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator - HHH000130: Instantiating explicit connection provider: org.hibernate.hikaricp.internal.HikariCPConnectionProvider
+2025-09-01 18:03:41.518 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Starting...
+2025-09-01 18:03:41.530 [main] INFO  com.zaxxer.hikari.pool.HikariPool - MyPool - Added connection ConnectionID:6 ClientConnectionId: fa6705a1-41f4-4792-8c9c-5f1d51a6afc3
+2025-09-01 18:03:41.530 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Start completed.
+2025-09-01 18:03:41.532 [main] INFO  org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:sqlserver://localhost:1433;databaseName=QuanLyCuaHangQuanAo;trustServerCertificate=true]
+	Database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+	Database version: 16.0
+	Autocommit mode: false
+	Isolation level: undefined/unknown
+	Pool: HikariCPConnectionProvider
+	Minimum pool size: 3
+	Maximum pool size: 10
+2025-09-01 18:03:41.588 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-01 18:03:41.589 [main] INFO  org.hibernate.orm.connections.access - HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@6956eb58] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+2025-09-01 18:03:41.687 [main] INFO  di.ServiceContainer - Registered singleton service: IKhachHangDAO
+2025-09-01 18:03:41.694 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: QuanLyCuaHangPU]
+2025-09-01 18:03:41.699 [main] INFO  org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator - HHH000130: Instantiating explicit connection provider: org.hibernate.hikaricp.internal.HikariCPConnectionProvider
+2025-09-01 18:03:41.700 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Starting...
+2025-09-01 18:03:41.709 [main] INFO  com.zaxxer.hikari.pool.HikariPool - MyPool - Added connection ConnectionID:10 ClientConnectionId: 5385d2f9-f479-45bc-acff-071d7e9ceca1
+2025-09-01 18:03:41.710 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Start completed.
+2025-09-01 18:03:41.711 [main] INFO  org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:sqlserver://localhost:1433;databaseName=QuanLyCuaHangQuanAo;trustServerCertificate=true]
+	Database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+	Database version: 16.0
+	Autocommit mode: false
+	Isolation level: undefined/unknown
+	Pool: HikariCPConnectionProvider
+	Minimum pool size: 3
+	Maximum pool size: 10
+2025-09-01 18:03:41.752 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-01 18:03:41.752 [main] INFO  org.hibernate.orm.connections.access - HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@27107a97] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+2025-09-01 18:03:41.843 [main] INFO  di.ServiceContainer - Registered singleton service: IHoaDonDAO
+2025-09-01 18:03:41.849 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: QuanLyCuaHangPU]
+2025-09-01 18:03:41.854 [main] INFO  org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator - HHH000130: Instantiating explicit connection provider: org.hibernate.hikaricp.internal.HikariCPConnectionProvider
+2025-09-01 18:03:41.855 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Starting...
+2025-09-01 18:03:41.864 [main] INFO  com.zaxxer.hikari.pool.HikariPool - MyPool - Added connection ConnectionID:12 ClientConnectionId: 167a9d79-4e47-4b97-af6a-236a026dc9d0
+2025-09-01 18:03:41.865 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Start completed.
+2025-09-01 18:03:41.866 [main] INFO  org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:sqlserver://localhost:1433;databaseName=QuanLyCuaHangQuanAo;trustServerCertificate=true]
+	Database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+	Database version: 16.0
+	Autocommit mode: false
+	Isolation level: undefined/unknown
+	Pool: HikariCPConnectionProvider
+	Minimum pool size: 3
+	Maximum pool size: 10
+2025-09-01 18:03:41.904 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-01 18:03:41.905 [main] INFO  org.hibernate.orm.connections.access - HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@4d745ac6] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+2025-09-01 18:03:41.969 [main] INFO  di.ServiceContainer - Registered singleton service: IChiTietHoaDonDAO
+2025-09-01 18:03:41.976 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: QuanLyCuaHangPU]
+2025-09-01 18:03:41.980 [main] INFO  org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator - HHH000130: Instantiating explicit connection provider: org.hibernate.hikaricp.internal.HikariCPConnectionProvider
+2025-09-01 18:03:41.981 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Starting...
+2025-09-01 18:03:41.990 [main] INFO  com.zaxxer.hikari.pool.HikariPool - MyPool - Added connection ConnectionID:15 ClientConnectionId: 10751d81-6672-438a-a51c-0e6ec5594c0d
+2025-09-01 18:03:41.990 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Start completed.
+2025-09-01 18:03:41.991 [main] INFO  org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:sqlserver://localhost:1433;databaseName=QuanLyCuaHangQuanAo;trustServerCertificate=true]
+	Database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+	Database version: 16.0
+	Autocommit mode: false
+	Isolation level: undefined/unknown
+	Pool: HikariCPConnectionProvider
+	Minimum pool size: 3
+	Maximum pool size: 10
+2025-09-01 18:03:42.039 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-01 18:03:42.039 [main] INFO  org.hibernate.orm.connections.access - HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@6164b3a2] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+2025-09-01 18:03:42.105 [main] INFO  di.ServiceContainer - Registered singleton service: IBienTheSanPhamDAO
+2025-09-01 18:03:42.111 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: QuanLyCuaHangPU]
+2025-09-01 18:03:42.115 [main] INFO  org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator - HHH000130: Instantiating explicit connection provider: org.hibernate.hikaricp.internal.HikariCPConnectionProvider
+2025-09-01 18:03:42.116 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Starting...
+2025-09-01 18:03:42.126 [main] INFO  com.zaxxer.hikari.pool.HikariPool - MyPool - Added connection ConnectionID:18 ClientConnectionId: 42a666aa-c4a9-4190-94c1-9c74950814cd
+2025-09-01 18:03:42.127 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Start completed.
+2025-09-01 18:03:42.128 [main] INFO  org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:sqlserver://localhost:1433;databaseName=QuanLyCuaHangQuanAo;trustServerCertificate=true]
+	Database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+	Database version: 16.0
+	Autocommit mode: false
+	Isolation level: undefined/unknown
+	Pool: HikariCPConnectionProvider
+	Minimum pool size: 3
+	Maximum pool size: 10
+2025-09-01 18:03:42.170 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-01 18:03:42.171 [main] INFO  org.hibernate.orm.connections.access - HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@410e043b] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+2025-09-01 18:03:42.266 [main] INFO  di.ServiceContainer - Registered singleton service: IMauSacDAO
+2025-09-01 18:03:42.273 [main] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: QuanLyCuaHangPU]
+2025-09-01 18:03:42.278 [main] INFO  org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator - HHH000130: Instantiating explicit connection provider: org.hibernate.hikaricp.internal.HikariCPConnectionProvider
+2025-09-01 18:03:42.279 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Starting...
+2025-09-01 18:03:42.288 [main] INFO  com.zaxxer.hikari.pool.HikariPool - MyPool - Added connection ConnectionID:21 ClientConnectionId: 801f6343-5d56-463e-a81d-87a7d8e9b24d
+2025-09-01 18:03:42.288 [main] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Start completed.
+2025-09-01 18:03:42.289 [main] INFO  org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:sqlserver://localhost:1433;databaseName=QuanLyCuaHangQuanAo;trustServerCertificate=true]
+	Database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+	Database version: 16.0
+	Autocommit mode: false
+	Isolation level: undefined/unknown
+	Pool: HikariCPConnectionProvider
+	Minimum pool size: 3
+	Maximum pool size: 10
+2025-09-01 18:03:42.335 [main] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-01 18:03:42.336 [main] INFO  org.hibernate.orm.connections.access - HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@3507200d] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+2025-09-01 18:03:42.406 [main] INFO  di.ServiceContainer - Registered singleton service: IKichThuocDAO
+2025-09-01 18:03:42.407 [main] INFO  di.ServiceContainer - Registered singleton service: IHinhThucThanhToanDAO
+2025-09-01 18:03:42.408 [main] INFO  di.ServiceContainer - Registered singleton factory: ISanPhamService
+2025-09-01 18:03:42.408 [main] INFO  di.ServiceContainer - Registered singleton factory: ITaiKhoanService
+2025-09-01 18:03:42.408 [main] INFO  di.ServiceContainer - Registered singleton service: SanPhamValidator
+2025-09-01 18:03:42.409 [main] INFO  di.ServiceContainer - Registered singleton service: TaiKhoanValidator
+2025-09-01 18:03:42.409 [main] INFO  config.ApplicationConfig - Application configuration initialized successfully
+2025-09-01 18:03:42.455 [main] INFO  main.Main - Look and feel set successfully
+2025-09-01 18:03:42.556 [AWT-EventQueue-0] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: QuanLyCuaHangPU]
+2025-09-01 18:03:42.561 [AWT-EventQueue-0] INFO  org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator - HHH000130: Instantiating explicit connection provider: org.hibernate.hikaricp.internal.HikariCPConnectionProvider
+2025-09-01 18:03:42.561 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Starting...
+2025-09-01 18:03:42.571 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.pool.HikariPool - MyPool - Added connection ConnectionID:25 ClientConnectionId: fdb732fa-1e29-46c4-9106-da327c32733c
+2025-09-01 18:03:42.571 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Start completed.
+2025-09-01 18:03:42.573 [AWT-EventQueue-0] INFO  org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:sqlserver://localhost:1433;databaseName=QuanLyCuaHangQuanAo;trustServerCertificate=true]
+	Database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+	Database version: 16.0
+	Autocommit mode: false
+	Isolation level: undefined/unknown
+	Pool: HikariCPConnectionProvider
+	Minimum pool size: 3
+	Maximum pool size: 10
+2025-09-01 18:03:42.608 [AWT-EventQueue-0] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-01 18:03:42.608 [AWT-EventQueue-0] INFO  org.hibernate.orm.connections.access - HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@ad2d97b] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+2025-09-01 18:03:42.744 [AWT-EventQueue-0] INFO  main.Main - Application started successfully
+2025-09-01 18:04:04.205 [AWT-EventQueue-0] INFO  org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: QuanLyCuaHangPU]
+2025-09-01 18:04:04.211 [AWT-EventQueue-0] INFO  org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator - HHH000130: Instantiating explicit connection provider: org.hibernate.hikaricp.internal.HikariCPConnectionProvider
+2025-09-01 18:04:04.211 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Starting...
+2025-09-01 18:04:04.224 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.pool.HikariPool - MyPool - Added connection ConnectionID:28 ClientConnectionId: e439795e-123f-4137-89db-4fd239790b04
+2025-09-01 18:04:04.224 [AWT-EventQueue-0] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Start completed.
+2025-09-01 18:04:04.226 [AWT-EventQueue-0] INFO  org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:sqlserver://localhost:1433;databaseName=QuanLyCuaHangQuanAo;trustServerCertificate=true]
+	Database driver: com.microsoft.sqlserver.jdbc.SQLServerDriver
+	Database version: 16.0
+	Autocommit mode: false
+	Isolation level: undefined/unknown
+	Pool: HikariCPConnectionProvider
+	Minimum pool size: 3
+	Maximum pool size: 10
+2025-09-01 18:04:04.282 [AWT-EventQueue-0] INFO  org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-09-01 18:04:04.282 [AWT-EventQueue-0] INFO  org.hibernate.orm.connections.access - HHH10001501: Connection obtained from JdbcConnectionAccess [org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator$ConnectionProviderJdbcConnectionAccess@6a7fee9a] for (non-JTA) DDL execution was not in auto-commit mode; the Connection 'local transaction' will be committed and the Connection will be set into auto-commit mode.
+2025-09-01 18:04:04.344 [AWT-EventQueue-0] INFO  util.EntityManagerUtil - EntityManagerFactory created successfully
+2025-09-01 18:04:05.971 [AWT-EventQueue-0] INFO  dao.impl.HoaDonDAO - Searching for invoice with ID: 14
+2025-09-01 18:04:05.988 [AWT-EventQueue-0] INFO  dao.impl.HoaDonDAO - Found invoice: 14 with 0 items
+2025-09-01 18:04:06.458 [AWT-EventQueue-0] INFO  dao.impl.HoaDonDAO - Searching for invoice with ID: 17
+2025-09-01 18:04:06.464 [AWT-EventQueue-0] INFO  dao.impl.HoaDonDAO - Found invoice: 17 with 2 items
+2025-09-01 18:04:06.999 [AWT-EventQueue-0] INFO  dao.impl.HoaDonDAO - Searching for invoice with ID: 22
+2025-09-01 18:04:07.003 [AWT-EventQueue-0] INFO  dao.impl.HoaDonDAO - Found invoice: 22 with 2 items
+2025-09-01 18:04:19.238 [Thread-0] INFO  main.Main - Application shutting down...
+2025-09-01 18:04:19.238 [Thread-0] INFO  config.ApplicationConfig - Shutting down application...
+2025-09-01 18:04:19.239 [Thread-0] INFO  com.zaxxer.hikari.HikariDataSource - MyPool - Shutdown initiated...
