@@ -107,7 +107,7 @@ public class MainMenuUI extends JFrame {
             btnNhanVien.addActionListener(e -> openNhanVienUI());
             adminButtons.add(btnNhanVien);
         }
-        if (!adminButtons.isEmpty()) groupedButtons.put("Quản trị hệ thống (Admin)", adminButtons);
+        if (!adminButtons.isEmpty()) groupedButtons.put("Quản trị hệ thống", adminButtons);
 
         // Manager & Admin configuration / analytics section
         List<JButton> managerButtons = new ArrayList<>();
@@ -139,7 +139,7 @@ public class MainMenuUI extends JFrame {
             btnHinhThucThanhToan.addActionListener(e -> openHinhThucThanhToanUI());
             managerButtons.add(btnHinhThucThanhToan);
         }
-        if (!managerButtons.isEmpty()) groupedButtons.put("Cấu hình & Phân tích (Manager / Admin)", managerButtons);
+        if (!managerButtons.isEmpty()) groupedButtons.put("Cấu hình & Phân tích", managerButtons);
 
         // Operational (Staff +) section
         List<JButton> staffButtons = new ArrayList<>();
@@ -171,7 +171,7 @@ public class MainMenuUI extends JFrame {
             btnDoiTra.addActionListener(e -> openDoiTraUI());
             staffButtons.add(btnDoiTra);
         }
-        if (!staffButtons.isEmpty()) groupedButtons.put("Nghiệp vụ bán hàng (Staff trở lên)", staffButtons);
+        if (!staffButtons.isEmpty()) groupedButtons.put("Nghiệp vụ bán hàng", staffButtons);
 
         if (groupedButtons.isEmpty()) {
             JLabel noAccess = new JLabel("Bạn chưa có quyền truy cập tính năng nào.");
