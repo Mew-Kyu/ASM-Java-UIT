@@ -23,7 +23,6 @@
         <class>model.NhaCungCap</class>
         <class>model.DonDatHang</class>
         <class>model.ChiTietDatHang</class>
-        <class>model.ChuongTrinhKhuyenMai</class>
         <class>model.HinhThucThanhToan</class>
         <class>model.PhieuDoiTra</class>
         <class>model.ChiTietPhieuDoiTra</class>

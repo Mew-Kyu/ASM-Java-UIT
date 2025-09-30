@@ -481,7 +481,6 @@ src/main/java/
 │   ├── NhaCungCap.java                 # 🏢 Supplier entity
 │   ├── DonDatHang.java                 # 📦 Purchase order entity
 │   ├── ChiTietDatHang.java             # 📋 Purchase order detail entity
-│   ├── ChuongTrinhKhuyenMai.java       # 🎁 Promotion program entity
 │   ├── HinhThucThanhToan.java          # 💰 Payment method entity
 │   ├── BaoCao.java                     # 📊 Report entity
 │   ├── ThongKeDoanhThu.java            # 📈 Revenue statistics entity
