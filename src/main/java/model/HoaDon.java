@@ -25,10 +25,10 @@ public class HoaDon {
     private Integer maHTTT;
 
     @Column(name = "PhiThanhToan", precision = 18, scale = 2)
-    private BigDecimal phiThanhToan;
+    private BigDecimal phiThanhToan = BigDecimal.ZERO;
 
     @Column(name = "TrangThaiThanhToan", length = 20)
-    private String trangThaiThanhToan;
+    private String trangThaiThanhToan = "PENDING";
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaKH")
@@ -57,6 +57,8 @@ public class HoaDon {
         this.maKH = khachHang;
         this.maNV = nhanVien;
         this.tongTien = BigDecimal.ZERO;
+        this.phiThanhToan = BigDecimal.ZERO;
+        this.trangThaiThanhToan = "PENDING";
     }
 
     // Getters and Setters
