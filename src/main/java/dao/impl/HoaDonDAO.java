@@ -3,7 +3,6 @@ package dao.impl;
 import dao.interfaces.IHoaDonDAO;
 import jakarta.persistence.*;
 import model.HoaDon;
-import org.hibernate.Hibernate;
 import exception.DAOException;
 
 import java.util.List;

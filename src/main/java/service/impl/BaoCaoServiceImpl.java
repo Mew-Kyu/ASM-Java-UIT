@@ -205,10 +205,16 @@ public class BaoCaoServiceImpl implements IBaoCaoService {
             throw new BusinessException("Số lượng tối thiểu phải >= 0");
         }
         try {
-            return baoCaoDAO.getSanPhamSapHet(soLuongToiThieu);
+            logger.info("Retrieving products with low stock, threshold: " + soLuongToiThieu);
+            List<ThongKeSanPham> result = baoCaoDAO.getSanPhamSapHet(soLuongToiThieu);
+            logger.info("Successfully retrieved " + result.size() + " products with low stock");
+            return result;
+        } catch (RuntimeException e) {
+            logger.log(Level.SEVERE, "Runtime error getting low stock products", e);
+            throw new BusinessException("Không thể lấy danh sách sản phẩm sắp hết: " + e.getMessage(), e);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error getting low stock products", e);
-            throw new BusinessException("Không thể lấy danh sách sản phẩm sắp hết: " + e.getMessage());
+            throw new BusinessException("Không thể lấy danh sách sản phẩm sắp hết: " + e.getMessage(), e);
         }
     }
     

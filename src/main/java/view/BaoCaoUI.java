@@ -3,25 +3,19 @@ package view;
 import service.interfaces.IBaoCaoService;
 import service.impl.BaoCaoServiceImpl;
 import dao.impl.BaoCaoDAO;
-import model.BaoCao;
-import model.ThongKeDoanhThu;
 import model.ThongKeSanPham;
 import util.RoleManager;
-import util.SessionManager;
-import exception.BusinessException;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.math.BigDecimal;
 import java.util.List;
-import com.toedter.calendar.JDateChooser; // Added for date picker
-import java.util.Date; // for JDateChooser value
-import java.time.ZoneId; // for conversion to LocalDate
+import com.toedter.calendar.JDateChooser;
+import java.util.Date;
+import java.time.ZoneId;
 
 /**
  * UI for Reports & Analytics Management

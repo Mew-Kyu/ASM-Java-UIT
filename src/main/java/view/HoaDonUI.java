@@ -1,10 +1,6 @@
 package view;
 
-import controller.BienTheSanPhamController;
-import controller.ChiTietHoaDonController;
 import controller.HoaDonController;
-import controller.KhachHangController;
-import controller.NhanVienController;
 import controller.HinhThucThanhToanController;
 import model.*;
 import util.SessionManager;

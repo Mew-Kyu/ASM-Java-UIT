@@ -8,7 +8,7 @@ import dao.impl.BienTheSanPhamDAO;
 import dao.impl.SanPhamDAO;
 import dao.impl.MauSacDAO;
 import dao.impl.KichThuocDAO;
-import util.ExcelBienTheExporter; // Added for Excel export
+import util.ExcelBienTheExporter;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;

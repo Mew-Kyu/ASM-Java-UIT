@@ -174,10 +174,9 @@ public class SanPhamUI extends JFrame {
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 0.3;
-        // Creation of Danh mục combo box (borderless like Kích thước in BienTheSanPhamUI)
         cmbDanhMuc = new JComboBox<>();
         cmbDanhMuc.setPreferredSize(new Dimension(150, 30));
-        cmbDanhMuc.setBorder(null); // borderless for cleaner look
+        cmbDanhMuc.setBorder(null);
         cmbDanhMuc.setFont(new Font("SansSerif", Font.PLAIN, 12));
         cmbDanhMuc.setBackground(Color.WHITE);
         cmbDanhMuc.setToolTipText("Chọn danh mục cho sản phẩm (bắt buộc)");

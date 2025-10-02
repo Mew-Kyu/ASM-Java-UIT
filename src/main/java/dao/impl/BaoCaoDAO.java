@@ -460,6 +460,8 @@ public class BaoCaoDAO extends BaseDAO<BaoCao, Integer> implements IBaoCaoDAO {
     public List<ThongKeSanPham> getSanPhamSapHet(int soLuongToiThieu) {
         EntityManager em = EntityManagerUtil.getEntityManager();
         try {
+            logger.info("Getting products with low stock, threshold: " + soLuongToiThieu);
+
             String sql = """
                 SELECT sp.MaSP, sp.TenSP, dm.TenDM,
                        0 as SoLuongBan,
@@ -471,7 +473,7 @@ public class BaoCaoDAO extends BaseDAO<BaoCao, Integer> implements IBaoCaoDAO {
                 LEFT JOIN DanhMuc dm ON sp.MaDM = dm.MaDM
                 LEFT JOIN BienTheSanPham bt ON sp.MaSP = bt.MaSP
                 GROUP BY sp.MaSP, sp.TenSP, dm.TenDM
-                HAVING SUM(bt.SoLuong) <= :soLuongToiThieu AND SUM(bt.SoLuong) > 0
+                HAVING COALESCE(SUM(bt.SoLuong), 0) <= :soLuongToiThieu AND COALESCE(SUM(bt.SoLuong), 0) >= 0
                 ORDER BY SoLuongTon ASC
                 """;
             
@@ -482,24 +484,32 @@ public class BaoCaoDAO extends BaseDAO<BaoCao, Integer> implements IBaoCaoDAO {
             List<Object[]> results = query.getResultList();
             List<ThongKeSanPham> thongKe = new ArrayList<>();
             
+            logger.info("Found " + results.size() + " products with low stock");
+
             for (Object[] row : results) {
-                int maSP = ((Number) row[0]).intValue();
-                String tenSP = (String) row[1];
-                String tenDanhMuc = (String) row[2];
-                int soLuongBan = ((Number) row[3]).intValue();
-                BigDecimal doanhThu = safeToBigDecimal(row[4]);
-                int soLuongTon = ((Number) row[5]).intValue();
-                BigDecimal giaTriTon = safeToBigDecimal(row[6]);
-                int soDonHang = ((Number) row[7]).intValue();
-                
-                thongKe.add(new ThongKeSanPham(maSP, tenSP, tenDanhMuc, soLuongBan, 
-                                             doanhThu, soLuongTon, giaTriTon, soDonHang));
+                try {
+                    int maSP = ((Number) row[0]).intValue();
+                    String tenSP = (String) row[1];
+                    String tenDanhMuc = row[2] != null ? (String) row[2] : "Chưa phân loại";
+                    int soLuongBan = row[3] != null ? ((Number) row[3]).intValue() : 0;
+                    BigDecimal doanhThu = safeToBigDecimal(row[4]);
+                    int soLuongTon = row[5] != null ? ((Number) row[5]).intValue() : 0;
+                    BigDecimal giaTriTon = safeToBigDecimal(row[6]);
+                    int soDonHang = row[7] != null ? ((Number) row[7]).intValue() : 0;
+
+                    thongKe.add(new ThongKeSanPham(maSP, tenSP, tenDanhMuc, soLuongBan,
+                                                 doanhThu, soLuongTon, giaTriTon, soDonHang));
+                } catch (Exception rowEx) {
+                    logger.log(Level.WARNING, "Error processing row in getSanPhamSapHet: " + rowEx.getMessage(), rowEx);
+                    // Continue processing other rows
+                }
             }
             
             return thongKe;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "Error getting low stock products", e);
-            return new ArrayList<>();
+            logger.log(Level.SEVERE, "Error getting low stock products: " + e.getMessage(), e);
+            // Instead of returning empty list, throw a runtime exception to be caught by service layer
+            throw new RuntimeException("Lỗi khi lấy danh sách sản phẩm sắp hết: " + e.getMessage(), e);
         } finally {
             em.close();
         }
