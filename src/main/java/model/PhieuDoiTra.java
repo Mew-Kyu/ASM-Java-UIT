@@ -18,9 +18,13 @@ public class PhieuDoiTra {
     @Column(name = "MaPhieuDT")
     private int maPhieuDT;
     
-    @Column(name = "MaHD", nullable = false)
-    private int maHD; // Hóa đơn gốc
-    
+    @Column(name = "MaHD", nullable = false, insertable = false, updatable = false)
+    private int maHD; // Hóa đơn gốc - keep for backward compatibility
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaHD", nullable = false)
+    private HoaDon hoaDon; // Proper JPA relationship
+
     @Column(name = "LoaiPhieu", length = 10, nullable = false)
     private String loaiPhieu; // "DOI" (đổi), "TRA" (trả)
     
@@ -122,6 +126,17 @@ public class PhieuDoiTra {
         this.maHD = maHD;
     }
     
+    public HoaDon getHoaDon() {
+        return hoaDon;
+    }
+
+    public void setHoaDon(HoaDon hoaDon) {
+        this.hoaDon = hoaDon;
+        if (hoaDon != null) {
+            this.maHD = hoaDon.getId();
+        }
+    }
+
     public String getLoaiPhieu() {
         return loaiPhieu;
     }

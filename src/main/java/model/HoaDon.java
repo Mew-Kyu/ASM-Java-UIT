@@ -41,6 +41,10 @@ public class HoaDon {
     @OneToMany(mappedBy = "hoaDon", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Set<ChiTietHoaDon> chiTietHoaDons = new LinkedHashSet<>();
 
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JoinColumn(name = "MaHD")
+    private Set<PhieuDoiTra> phieuDoiTraSet = new LinkedHashSet<>();
+
     // Constructors
     public HoaDon() {
         this.ngayLap = LocalDate.now();
@@ -132,6 +136,14 @@ public class HoaDon {
 
     public void setChiTietHoaDons(Set<ChiTietHoaDon> chiTietHoaDons) {
         this.chiTietHoaDons = chiTietHoaDons;
+    }
+
+    public Set<PhieuDoiTra> getPhieuDoiTraSet() {
+        return phieuDoiTraSet;
+    }
+
+    public void setPhieuDoiTraSet(Set<PhieuDoiTra> phieuDoiTraSet) {
+        this.phieuDoiTraSet = phieuDoiTraSet;
     }
 
     // Business methods

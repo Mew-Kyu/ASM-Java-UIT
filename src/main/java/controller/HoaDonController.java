@@ -2,6 +2,7 @@ package controller;
 
 import dao.impl.HoaDonDAO;
 import model.HoaDon;
+import exception.DAOException;
 import java.util.List;
 
 public class HoaDonController {
@@ -29,7 +30,7 @@ public class HoaDonController {
         hoaDonDAO.update(hd);
     }
 
-    public void deleteHoaDon(int maHD) {
+    public void deleteHoaDon(int maHD) throws DAOException {
         hoaDonDAO.delete(maHD);
     }
 
